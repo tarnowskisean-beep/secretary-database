@@ -1,0 +1,255 @@
+'use server'
+
+import { prisma } from '@/lib/db'
+import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { FormState } from '@/lib/types'
+
+const emptyToNull = (val: unknown) => (val === '' ? null : val)
+
+const OwnerSchema = z.object({
+    id: z.string().uuid(),
+    type: z.enum(['ENTITY', 'PERSON']),
+    percentage: z.number().min(0).max(100)
+})
+
+const EntitySchema = z.object({
+    legalName: z.string().min(1, "Legal Name is required"),
+    ein: z.preprocess(emptyToNull, z.string().optional().nullable()),
+    entityType: z.string().min(1, "Entity Type is required"),
+    taxClassification: z.preprocess(emptyToNull, z.string().optional().nullable()),
+    stateOfIncorporation: z.preprocess(emptyToNull, z.string().optional().nullable()),
+    fiscalYearEnd: z.preprocess(emptyToNull, z.string().optional().nullable()),
+    logoUrl: z.preprocess(emptyToNull, z.string().url().optional().nullable()),
+    parentAppointsGoverningBody: z.coerce.boolean().optional(),
+    supportingOrgType: z.preprocess(emptyToNull, z.string().optional().nullable()),
+    owners: z.string().transform((str, ctx) => {
+        try {
+            return z.array(OwnerSchema).parse(JSON.parse(str))
+        } catch {
+            return []
+        }
+    }).optional()
+})
+
+// ...
+export async function getUniqueStates() {
+    const states = await prisma.entity.findMany({
+        select: { stateOfIncorporation: true },
+        distinct: ['stateOfIncorporation'],
+        where: { stateOfIncorporation: { not: null } },
+        orderBy: { stateOfIncorporation: 'asc' }
+    })
+    return states.map(s => s.stateOfIncorporation).filter(Boolean) as string[]
+}
+
+export async function getEntities(filters?: { type?: string, state?: string }) {
+    const where: import('@prisma/client').Prisma.EntityWhereInput = {}
+
+    if (filters?.type) {
+        where.entityType = filters.type
+    }
+
+    if (filters?.state) {
+        where.stateOfIncorporation = filters.state
+    }
+
+    return await prisma.entity.findMany({
+        where,
+        orderBy: { legalName: 'asc' }
+    })
+}
+
+export async function getEntity(id: string) {
+    return await prisma.entity.findUnique({
+        where: { id },
+        include: {
+            owners: {
+                include: {
+                    ownerEntity: true,
+                    ownerPerson: true
+                }
+            },
+            subsidiaries: {
+                include: { childEntity: true }
+            },
+            roles: {
+                include: {
+                    person: true
+                },
+                where: {
+                    endDate: null
+                }
+            },
+            transactionsOut: {
+                include: { toEntity: true },
+                orderBy: { date: 'desc' }
+            },
+            transactionsIn: {
+                include: { fromEntity: true },
+                orderBy: { date: 'desc' }
+            }
+        }
+    })
+}
+
+export async function createEntity(prevState: FormState, formData: FormData) {
+    const data = Object.fromEntries(formData.entries())
+
+    const validated = EntitySchema.safeParse({
+        ...data,
+        parentAppointsGoverningBody: data.parentAppointsGoverningBody === 'on',
+    })
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: "Validation failed"
+        }
+    }
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            const entity = await tx.entity.create({
+                data: {
+                    legalName: validated.data.legalName,
+                    ein: validated.data.ein || null,
+                    entityType: validated.data.entityType,
+                    taxClassification: validated.data.taxClassification || null,
+                    stateOfIncorporation: validated.data.stateOfIncorporation || null,
+                    fiscalYearEnd: validated.data.fiscalYearEnd || null,
+                    logoUrl: validated.data.logoUrl || null,
+                    parentAppointsGoverningBody: validated.data.parentAppointsGoverningBody || false,
+                    supportingOrgType: validated.data.supportingOrgType
+                }
+            })
+
+            if (validated.data.owners && validated.data.owners.length > 0) {
+                await tx.entityOwner.createMany({
+                    data: validated.data.owners.map(owner => ({
+                        childEntityId: entity.id,
+                        ownerEntityId: owner.type === 'ENTITY' ? owner.id : null,
+                        ownerPersonId: owner.type === 'PERSON' ? owner.id : null,
+                        percentage: owner.percentage
+                    }))
+                })
+            }
+        })
+
+    } catch (e) {
+        console.error("Create Entity Error:", e)
+        return { message: "Failed to create entity" }
+    }
+
+    revalidatePath('/entities')
+    redirect('/entities')
+}
+
+export async function updateEntity(id: string, prevState: FormState, formData: FormData) {
+    const data = Object.fromEntries(formData.entries())
+    // Preprocess checkbox
+    const rawData = {
+        ...data,
+        parentAppointsGoverningBody: data.parentAppointsGoverningBody === 'on' || data.parentAppointsGoverningBody === 'true',
+    }
+
+    const validated = EntitySchema.safeParse(rawData)
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: "Validation failed"
+        }
+    }
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // Update core entity details
+            await tx.entity.update({
+                where: { id },
+                data: {
+                    legalName: validated.data.legalName,
+                    ein: validated.data.ein || null,
+                    entityType: validated.data.entityType,
+                    taxClassification: validated.data.taxClassification || null,
+                    stateOfIncorporation: validated.data.stateOfIncorporation || null,
+                    fiscalYearEnd: validated.data.fiscalYearEnd || null,
+                    logoUrl: validated.data.logoUrl || null,
+                    parentAppointsGoverningBody: validated.data.parentAppointsGoverningBody,
+                    supportingOrgType: validated.data.supportingOrgType
+                }
+            })
+
+            // Update owners: Delete all existing and re-create
+            if (validated.data.owners !== undefined) {
+                await tx.entityOwner.deleteMany({
+                    where: { childEntityId: id }
+                })
+
+                if (validated.data.owners.length > 0) {
+                    await tx.entityOwner.createMany({
+                        data: validated.data.owners.map(owner => ({
+                            childEntityId: id,
+                            ownerEntityId: owner.type === 'ENTITY' ? owner.id : null,
+                            ownerPersonId: owner.type === 'PERSON' ? owner.id : null,
+                            percentage: owner.percentage
+                        }))
+                    })
+                }
+            }
+        })
+    } catch (e) {
+        console.error("Update Entity Error:", e)
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        return { message: `Failed to update entity: ${message}` }
+    }
+
+    revalidatePath(`/entities/${id}`)
+    revalidatePath('/entities')
+    redirect(`/entities/${id}`)
+}
+
+const TransactionSchema = z.object({
+    fromEntityId: z.string().uuid(),
+    toEntityId: z.string().uuid(),
+    type: z.string().min(1),
+    amount: z.coerce.number().min(0),
+    description: z.string().optional(),
+    date: z.coerce.date()
+})
+
+export async function createTransaction(prevState: FormState, formData: FormData) {
+    const validated = TransactionSchema.safeParse(Object.fromEntries(formData.entries()))
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: "Validation failed"
+        }
+    }
+
+    if (validated.data.fromEntityId === validated.data.toEntityId) {
+        return { message: "Cannot create transaction to self." }
+    }
+
+    try {
+        await prisma.relatedTransaction.create({
+            data: {
+                fromEntityId: validated.data.fromEntityId,
+                toEntityId: validated.data.toEntityId,
+                type: validated.data.type,
+                amount: validated.data.amount,
+                description: validated.data.description,
+                date: validated.data.date
+            }
+        })
+    } catch (e) {
+        console.error("Create Transaction Error:", e)
+        return { message: "Failed to create transaction" }
+    }
+
+    revalidatePath(`/entities/${validated.data.fromEntityId}`)
+    revalidatePath(`/entities/${validated.data.toEntityId}`)
+    return { message: "Transaction created", success: true }
+}
