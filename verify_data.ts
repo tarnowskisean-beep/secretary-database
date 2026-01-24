@@ -14,12 +14,13 @@ async function main() {
         console.log(` - ${t.amount} from ${t.fromEntity.legalName} to ${t.toEntity.legalName} (${t.type})`)
     })
 
-    const taxable = await prisma.entity.findMany({
-        where: { ownershipPercentage: { not: null } }
+    const taxable = await prisma.entityOwner.findMany({
+        where: { percentage: { gt: 0 } },
+        include: { childEntity: true }
     })
     console.log(`Taxable Entities with Ownership Found: ${taxable.length}`)
     taxable.forEach(e => {
-        console.log(` - ${e.legalName}: ${e.ownershipPercentage}%`)
+        console.log(` - ${e.childEntity.legalName}: ${e.percentage}%`)
     })
 }
 

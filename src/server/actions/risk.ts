@@ -30,8 +30,6 @@ type EntityWithRelations = Entity & {
         ownerEntity: Entity | null,
         ownerPerson: Person | null
     })[]
-    ownerEntity: Entity | null
-    ownerPerson: Person | null
 }
 
 export async function analyzeRisksFromData(
