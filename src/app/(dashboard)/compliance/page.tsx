@@ -1,6 +1,7 @@
 
 import { detectOverlaps } from '@/server/actions/analysis'
 import { analyzeRisks, getScheduleRSummary } from '@/server/actions/risk'
+import { generateScheduleR } from '@/server/actions/schedule-r'
 import { prisma } from '@/lib/db'
 import RiskCard from '@/components/RiskCard'
 import RiskFilters from '@/components/RiskFilters'
@@ -43,10 +44,15 @@ export default async function CompliancePage(props: {
 
     // Pass date filters to summary (convert string to Date object if needed, or rely on Prisma string handling)
     // Prisma prefers Date objects for date types usually
-    const scheduleRStats = await getScheduleRSummary(
-        start ? new Date(start) : undefined,
-        end ? new Date(end) : undefined
-    )
+    let scheduleRStats;
+    if (entityFilter) {
+        scheduleRStats = await generateScheduleR(entityFilter)
+    } else {
+        scheduleRStats = await getScheduleRSummary(
+            start ? new Date(start) : undefined,
+            end ? new Date(end) : undefined
+        )
+    }
 
     // 4. Apply Risk Filters
     if (typeFilter) {
@@ -164,8 +170,9 @@ export default async function CompliancePage(props: {
             }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                     <h2 style={{ fontSize: "1.25rem", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        📊 Schedule R Data Summary
+                        📊 Schedule R Data Summary {entityFilter ? '(Filtered)' : ''}
                     </h2>
+                    {/* @ts-ignore */}
                     <ScheduleRDetailsDialog stats={scheduleRStats} allEntities={allEntities} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
