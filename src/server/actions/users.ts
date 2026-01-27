@@ -21,6 +21,17 @@ export async function createUser(formData: unknown) {
             return { success: false, error: "Configuration Error: Missing Service Role Key." };
         }
 
+        // Validate Key Role
+        try {
+            const [, payload] = process.env.SUPABASE_SERVICE_ROLE_KEY.split('.');
+            const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
+            if (decoded.role !== 'service_role') {
+                return { success: false, error: `Configuration Error: Invalid Service Role Key. Computed role: '${decoded.role}'. You probably pasted the Anon key.` };
+            }
+        } catch {
+            return { success: false, error: "Configuration Error: Malformed Service Role Key." };
+        }
+
         const result = CreateUserSchema.safeParse(formData);
 
         if (!result.success) {
