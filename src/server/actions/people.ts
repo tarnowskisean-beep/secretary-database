@@ -46,8 +46,6 @@ export async function createPerson(prevState: FormState, formData: FormData) {
     redirect('/people')
 }
 
-import { isSimilar } from '@/lib/string-utils'
-
 export async function checkPersonDuplicate(firstName: string, lastName: string) {
     // 1. Broad search: Match first 3 chars of First Name AND exact Last Name
     // This reduces the set we need to process in JS
@@ -59,22 +57,15 @@ export async function checkPersonDuplicate(firstName: string, lastName: string) 
         select: { id: true, firstName: true, lastName: true }
     })
 
-    // 2. Refine with Levenshtein
+    // 2. Refine
     const duplicates = candidates.filter(c => {
-        // Check fuzzy match on first name
-        // "Jon" vs "Jonathan" -> similar?
-        // Let's use a specialized check: if one is a substring of the other OR decent levenshtein
         const f1 = c.firstName.toLowerCase()
         const f2 = firstName.toLowerCase()
 
         // Direct substring check (Jon in Jonathan)
-        if (f1.includes(f2) || f2.includes(f1)) return true
-
-        // Levenshtein check for typos
-        return isSimilar(firstName, c.firstName, 2)
+        return f1.includes(f2) || f2.includes(f1)
     })
 
-    // ... duplicate check code ...
     return duplicates
 }
 
