@@ -15,7 +15,13 @@ export default function RiskCard({ risk }: { risk: RiskFlag }) {
                         <span className={`px-2 py-0.5 rounded text-xs font-bold text-white ${color}`}>
                             {risk.level}
                         </span>
-                        <span className="font-medium text-sm text-muted-foreground">{risk.type}</span>
+                        <span className="font-medium text-sm text-muted-foreground">
+                            {risk.type === 'INDEPENDENCE' && "Board Governance"}
+                            {risk.type === 'CONFLICT' && "Conflict of Interest"}
+                            {risk.type === 'CONTROL' && "Corporate Control"}
+                            {risk.type === 'SCHEDULE_R' && "Related Entity"}
+                            {!['INDEPENDENCE', 'CONFLICT', 'CONTROL', 'SCHEDULE_R'].includes(risk.type) && risk.type}
+                        </span>
                     </div>
                     <p className="font-medium">{risk.message}</p>
                     <p className="text-sm text-muted-foreground mt-1">{risk.details}</p>

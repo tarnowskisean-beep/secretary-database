@@ -61,10 +61,10 @@ export default function RiskFilters({ entities, people }: { entities: EntityOpti
                     }}
                 >
                     <option value="">All Types</option>
-                    <option value="CONTROL">Control Issues (Appoitment/Overlap)</option>
-                    <option value="INDEPENDENCE">Board Independence</option>
+                    <option value="CONTROL">Corporate Control</option>
+                    <option value="INDEPENDENCE">Board Governance</option>
                     <option value="CONFLICT">Conflict of Interest</option>
-                    <option value="SCHEDULE_R">Schedule R / Related Org</option>
+                    <option value="SCHEDULE_R">Related Entity</option>
                 </select>
             </div>
 
