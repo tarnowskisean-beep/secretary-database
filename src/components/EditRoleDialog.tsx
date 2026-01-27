@@ -1,6 +1,6 @@
 'use client'
 
-import { updateRole } from '@/server/actions/roles'
+import { updateRole, deleteRole } from '@/server/actions/roles'
 import { useState, useActionState, useEffect } from 'react'
 
 // If RoleType isn't exported globally, we can just use strings or define it:
@@ -166,6 +166,30 @@ export default function EditRoleDialog({ role }: {
                     </div>
                     {state?.message && !state.success && <p style={{ color: "red", textAlign: "center", fontSize: "0.875rem" }}>{state.message}</p>}
                 </form>
+
+                <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--border)" }}>
+                    <form action={async () => {
+                        if (confirm("Are you sure you want to completely delete this role? This cannot be undone.")) {
+                            await deleteRole(role.id, role.personId, role.entityId)
+                            setIsOpen(false)
+                        }
+                    }}>
+                        <button
+                            type="submit"
+                            style={{
+                                background: "none",
+                                border: "none",
+                                color: "red",
+                                fontSize: "0.875rem",
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                                padding: 0
+                            }}
+                        >
+                            Delete this role entry entirely
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     )

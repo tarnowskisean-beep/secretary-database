@@ -161,3 +161,16 @@ export async function updateRole(roleId: string, prevState: FormState, formData:
         return { message: "Failed to update role" }
     }
 }
+
+export async function deleteRole(roleId: string, personId: string, entityId: string) {
+    try {
+        await prisma.boardRole.delete({
+            where: { id: roleId }
+        })
+        revalidatePath(`/people/${personId}`)
+        revalidatePath(`/entities/${entityId}`)
+        return { success: true, message: "Role deleted successfully" }
+    } catch {
+        return { message: "Failed to delete role" }
+    }
+}
