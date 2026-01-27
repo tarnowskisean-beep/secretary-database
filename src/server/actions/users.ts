@@ -16,6 +16,11 @@ const CreateUserSchema = z.object({
 export async function createUser(formData: unknown) {
     try {
         await requireAdmin()
+
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            return { success: false, error: "Configuration Error: Missing Service Role Key." };
+        }
+
         const result = CreateUserSchema.safeParse(formData);
 
         if (!result.success) {
@@ -87,7 +92,11 @@ export async function createUser(formData: unknown) {
 
     } catch (error) {
         console.error("Create User Error:", error);
-        return { success: false, error: "Failed to create user" };
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        if (errorMessage.includes("supabaseKey")) {
+            return { success: false, error: "Missing Service Role Key (Local Dev?)" };
+        }
+        return { success: false, error: errorMessage };
     }
 }
 
