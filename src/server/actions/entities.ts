@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { FormState } from '@/lib/types'
+import { logAuditAction } from './audit'
 
 const emptyToNull = (val: unknown) => (val === '' ? null : val)
 
@@ -110,7 +111,7 @@ export async function createEntity(prevState: FormState, formData: FormData) {
     }
 
     try {
-        await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             const entity = await tx.entity.create({
                 data: {
                     legalName: validated.data.legalName,
@@ -135,12 +136,22 @@ export async function createEntity(prevState: FormState, formData: FormData) {
                     }))
                 })
             }
+            return entity.id
         })
+
+        await logAuditAction("CREATE", "Entity", result, `Created entity ${validated.data.legalName}`)
 
     } catch (e) {
         console.error("Create Entity Error:", e)
         return { message: "Failed to create entity" }
     }
+
+    // Since we can't easily get the ID from inside the transaction unless we return it,
+    // we should ideally refactor to get the ID. But wait, we can't await inside the tx callback from outside.
+    // Actually, prisma transaction returns the result of the callback.
+    // I need to refactor the structure slightly to capture the ID.
+    // BUT since I am in a 'replace' block, I cannot easily refactor the whole function.
+    // I will modify the 'try' block to return the entity.
 
     revalidatePath('/entities')
     redirect('/entities')
@@ -204,6 +215,8 @@ export async function updateEntity(id: string, prevState: FormState, formData: F
         const message = e instanceof Error ? e.message : 'Unknown error'
         return { message: `Failed to update entity: ${message}` }
     }
+
+    await logAuditAction("UPDATE", "Entity", id, `Updated entity ${validated.data.legalName}`)
 
     revalidatePath(`/entities/${id}`)
     revalidatePath('/entities')

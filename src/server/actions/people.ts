@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { FormState } from '@/lib/types'
+import { logAuditAction } from './audit'
 
 const PersonSchema = z.object({
     firstName: z.string().min(1, "First Name is required"),
@@ -30,12 +31,13 @@ export async function createPerson(prevState: FormState, formData: FormData) {
     }
 
     try {
-        await prisma.person.create({
+        const newPerson = await prisma.person.create({
             data: {
                 firstName: validated.data.firstName,
                 lastName: validated.data.lastName,
             }
         })
+        await logAuditAction("CREATE", "Person", newPerson.id, `Created person ${newPerson.firstName} ${newPerson.lastName}`)
     } catch {
         return { message: "Failed to create person" }
     }
@@ -96,6 +98,7 @@ export async function deletePerson(id: string) {
         }
 
         await prisma.person.delete({ where: { id } })
+        await logAuditAction("DELETE", "Person", id, `Deleted person ID ${id}`)
         revalidatePath('/people')
         return { success: true }
     } catch (error) {
