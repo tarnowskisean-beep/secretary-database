@@ -70,6 +70,29 @@ export default function RiskFilters({ entities, people }: { entities: EntityOpti
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
+                    Risk Level
+                </label>
+                <select
+                    value={searchParams.get('level') || ''}
+                    onChange={(e) => handleFilterChange('level', e.target.value)}
+                    style={{
+                        padding: "0.5rem",
+                        borderRadius: "var(--radius)",
+                        border: "1px solid var(--border)",
+                        backgroundColor: "var(--background)",
+                        fontSize: "0.875rem",
+                        minWidth: "150px"
+                    }}
+                >
+                    <option value="">All Levels</option>
+                    <option value="HIGH">High Risk</option>
+                    <option value="MEDIUM">Medium Risk</option>
+                    <option value="INFO">Info / Disclosure</option>
+                </select>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
                     Entity
                 </label>
                 <select
@@ -117,6 +140,6 @@ export default function RiskFilters({ entities, people }: { entities: EntityOpti
                     ))}
                 </select>
             </div>
-        </div>
+        </div >
     )
 }

@@ -35,6 +35,7 @@ export default async function CompliancePage(props: {
     const end = typeof searchParams.end === 'string' ? searchParams.end : today
 
     const typeFilter = typeof searchParams.type === 'string' ? searchParams.type : null
+    const levelFilter = typeof searchParams.level === 'string' ? searchParams.level : null
     const entityFilter = typeof searchParams.entityId === 'string' ? searchParams.entityId : null
     const personFilter = typeof searchParams.personId === 'string' ? searchParams.personId : null
 
@@ -57,6 +58,10 @@ export default async function CompliancePage(props: {
     // 4. Apply Risk Filters
     if (typeFilter) {
         risks = risks.filter(r => r.type === typeFilter)
+    }
+
+    if (levelFilter) {
+        risks = risks.filter(r => r.level === levelFilter)
     }
 
     if (entityFilter) {
