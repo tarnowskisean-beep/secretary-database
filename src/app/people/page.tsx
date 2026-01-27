@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getPeople } from '@/server/actions/people'
 import Link from 'next/link'
 import PeopleGrid from '@/components/PeopleGrid'
