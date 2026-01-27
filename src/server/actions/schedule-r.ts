@@ -56,16 +56,17 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
 
     // B. Upstream (Parents)
     filer.owners.forEach(owner => {
-        if (owner.ownerEntity) {
+        const parentEntity = owner.ownerEntity;
+        if (parentEntity) {
             if (owner.percentage > 50) {
-                addFn(owner.ownerEntity, 'PARENT', owner.percentage, owner.ownerEntity.legalName);
+                addFn(parentEntity, 'PARENT', owner.percentage, parentEntity.legalName);
             }
             // C. Brother/Sister (Common Control)
             // If Parent owns > 50% of ME, and > 50% of THEM, we are brother/sister.
             if (owner.percentage > 50) {
-                owner.ownerEntity.subsidiaries.forEach(sibling => {
+                parentEntity.subsidiaries.forEach(sibling => {
                     if (sibling.percentage > 50 && sibling.childEntityId !== filer.id) {
-                        addFn(sibling.childEntity, 'BROTHER_SISTER', sibling.percentage, owner.ownerEntity.legalName); // Parent is the common link
+                        addFn(sibling.childEntity, 'BROTHER_SISTER', sibling.percentage, parentEntity.legalName); // Parent is the common link
                     }
                 });
             }
