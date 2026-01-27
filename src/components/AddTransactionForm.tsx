@@ -7,7 +7,7 @@ export default function AddTransactionForm({
     currentEntityId,
     allEntities
 }: {
-    currentEntityId: string,
+    currentEntityId?: string,
     allEntities: { id: string, legalName: string }[]
 }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -33,12 +33,26 @@ export default function AddTransactionForm({
         <div style={{ marginTop: "1rem", padding: "1rem", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--card)" }}>
             <h4 style={{ fontSize: "1rem", marginBottom: "1rem" }}>Record New Transaction</h4>
             <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <input type="hidden" name="fromEntityId" value={currentEntityId} />
+
+                {currentEntityId ? (
+                    <input type="hidden" name="fromEntityId" value={currentEntityId} />
+                ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        <label className="text-sm font-medium">From Entity</label>
+                        <select name="fromEntityId" className="input" required defaultValue="">
+                            <option value="" disabled>Select Entity...</option>
+                            {allEntities.map(e => (
+                                <option key={e.id} value={e.id}>{e.legalName}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                         <label className="text-sm font-medium">To Entity</label>
-                        <select name="toEntityId" className="input" required>
+                        <select name="toEntityId" className="input" required defaultValue="">
+                            <option value="" disabled>Select Entity...</option>
                             {allEntities
                                 .filter(e => e.id !== currentEntityId)
                                 .map(e => (

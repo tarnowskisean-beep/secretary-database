@@ -166,7 +166,7 @@ export default async function CompliancePage(props: {
                     <h2 style={{ fontSize: "1.25rem", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         📊 Schedule R Data Summary
                     </h2>
-                    <ScheduleRDetailsDialog stats={scheduleRStats} />
+                    <ScheduleRDetailsDialog stats={scheduleRStats} allEntities={allEntities} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
                     <div>
@@ -174,9 +174,9 @@ export default async function CompliancePage(props: {
                         <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{scheduleRStats.disregardedCount}</div>
                     </div>
                     <div>
-                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part III: Taxable Subs</div>
-                        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: scheduleRStats.taxableCount > 0 ? "var(--warning)" : "inherit" }}>
-                            {scheduleRStats.taxableCount}
+                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part III: Related Partnerships</div>
+                        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: scheduleRStats.relatedPartnershipCount > 0 ? "var(--warning)" : "inherit" }}>
+                            {scheduleRStats.relatedPartnershipCount}
                         </div>
                     </div>
                     <div>

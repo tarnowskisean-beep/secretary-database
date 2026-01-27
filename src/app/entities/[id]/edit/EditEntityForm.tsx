@@ -94,16 +94,71 @@ export default function EditEntityForm({ entity, allEntities, allPeople }: { ent
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <label htmlFor="logoUrl" style={{ fontWeight: 500 }}>Logo URL (Optional)</label>
-                <input
-                    type="url"
-                    id="logoUrl"
-                    name="logoUrl"
-                    defaultValue={entity.logoUrl || ''}
-                    placeholder="https://example.com/logo.png"
-                    className="input"
-                />
-                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>URL to a public image file (PNG/JPG)</p>
+                <label style={{ fontWeight: 500 }}>Entity Logo (Upload)</label>
+
+                {/* Hidden input to store Base64 string for Server Action */}
+                <input type="hidden" name="logoUrl" value={entity.logoUrl || ''} id="logoUrlHidden" />
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {/* Preview */}
+                    <div style={{
+                        width: '60px', height: '60px',
+                        border: '1px dashed var(--border)',
+                        borderRadius: '0.25rem',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        overflow: 'hidden', background: "var(--muted)"
+                    }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            id="logoPreview"
+                            src={entity.logoUrl || ''}
+                            alt=""
+                            style={{ maxWidth: '100%', maxHeight: '100%', display: entity.logoUrl ? 'block' : 'none' }}
+                        />
+                        <span id="logoPlaceholder" style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', display: entity.logoUrl ? 'none' : 'block' }}>No Logo</span>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                        <input
+                            type="file"
+                            accept="image/png, image/jpeg"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                    if (file.size > 500000) { // 500KB limit check
+                                        alert("File too large. Please choose an image under 500KB.")
+                                        e.target.value = ''
+                                        return
+                                    }
+
+                                    const reader = new FileReader()
+                                    reader.onload = (ev) => {
+                                        const base64 = ev.target?.result as string
+
+                                        // Update Hidden Input for form submission
+                                        const hiddenInput = document.getElementById('logoUrlHidden') as HTMLInputElement
+                                        if (hiddenInput) hiddenInput.value = base64
+
+                                        // Update Preview
+                                        const preview = document.getElementById('logoPreview') as HTMLImageElement
+                                        const placeholder = document.getElementById('logoPlaceholder') as HTMLSpanElement
+                                        if (preview) {
+                                            preview.src = base64
+                                            preview.style.display = 'block'
+                                        }
+                                        if (placeholder) placeholder.style.display = 'none'
+                                    }
+                                    reader.readAsDataURL(file)
+                                }
+                            }}
+                            className="input"
+                            style={{ padding: '0.5rem' }}
+                        />
+                        <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
+                            Select an image file (PNG/JPG, max 500KB). It will be embedded directly.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>

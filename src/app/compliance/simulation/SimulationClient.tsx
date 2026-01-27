@@ -16,6 +16,7 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
     const [loading, setLoading] = useState(false)
 
     // Form State
+    const [actionType, setActionType] = useState<'ADD' | 'REMOVE'>('ADD')
     const [selectedPerson, setSelectedPerson] = useState(initialPeople[0]?.id || '')
     const [selectedEntity, setSelectedEntity] = useState(initialEntities[0]?.id || '')
     const [roleType, setRoleType] = useState('DIRECTOR')
@@ -36,12 +37,12 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
 
         if (activeTab === 'ROLE') {
             newMod = {
-                type: 'ADD',
+                type: actionType,
                 personId: selectedPerson,
                 entityId: selectedEntity,
-                roleType,
-                isCompensated,
-                votingRights
+                roleType: actionType === 'ADD' ? roleType : undefined,
+                isCompensated: actionType === 'ADD' ? isCompensated : undefined,
+                votingRights: actionType === 'ADD' ? votingRights : undefined
             }
         } else {
             if (relPerson1 === relPerson2) {
@@ -68,6 +69,11 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
         } else {
             await runSimulation(newMods)
         }
+    }
+
+    const handleClearAll = () => {
+        setModifications([])
+        setResults(null)
     }
 
     const runSimulation = async (mods: SimulationModification[]) => {
@@ -133,6 +139,30 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
 
                     {activeTab === 'ROLE' ? (
                         <>
+                            {/* Action Type Toggle */}
+                            <div style={{ display: "flex", gap: "1rem", marginBottom: "0.5rem" }}>
+                                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                                    <input
+                                        type="radio"
+                                        name="actionType"
+                                        checked={actionType === 'ADD'}
+                                        onChange={() => setActionType('ADD')}
+                                        style={{ marginRight: "0.5rem" }}
+                                    />
+                                    <span style={{ fontWeight: 500 }}>Add Person</span>
+                                </label>
+                                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                                    <input
+                                        type="radio"
+                                        name="actionType"
+                                        checked={actionType === 'REMOVE'}
+                                        onChange={() => setActionType('REMOVE')}
+                                        style={{ marginRight: "0.5rem" }}
+                                    />
+                                    <span style={{ fontWeight: 500 }}>Remove Person</span>
+                                </label>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium mb-1">Person</label>
                                 <select
@@ -159,43 +189,45 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
                                 </select>
                             </div>
 
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Role Type</label>
-                                    <select
-                                        className="input"
-                                        value={roleType}
-                                        onChange={e => setRoleType(e.target.value)}
-                                    >
-                                        <option value="DIRECTOR">Director</option>
-                                        <option value="OFFICER">Officer</option>
-                                        <option value="TRUSTEE">Trustee</option>
-                                        <option value="KEY_EMPLOYEE">Key Employee</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingTop: "1.5rem" }}>
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <input
-                                            type="checkbox"
-                                            id="comp"
-                                            checked={isCompensated}
-                                            onChange={e => setIsCompensated(e.target.checked)}
-                                            style={{ marginRight: "0.5rem" }}
-                                        />
-                                        <label htmlFor="comp">Compensated?</label>
+                            {actionType === 'ADD' && (
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Role Type</label>
+                                        <select
+                                            className="input"
+                                            value={roleType}
+                                            onChange={e => setRoleType(e.target.value)}
+                                        >
+                                            <option value="DIRECTOR">Director</option>
+                                            <option value="OFFICER">Officer</option>
+                                            <option value="TRUSTEE">Trustee</option>
+                                            <option value="KEY_EMPLOYEE">Key Employee</option>
+                                        </select>
                                     </div>
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <input
-                                            type="checkbox"
-                                            id="vote"
-                                            checked={votingRights}
-                                            onChange={e => setVotingRights(e.target.checked)}
-                                            style={{ marginRight: "0.5rem" }}
-                                        />
-                                        <label htmlFor="vote">Voting?</label>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingTop: "1.5rem" }}>
+                                        <div style={{ display: "flex", alignItems: "center" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="comp"
+                                                checked={isCompensated}
+                                                onChange={e => setIsCompensated(e.target.checked)}
+                                                style={{ marginRight: "0.5rem" }}
+                                            />
+                                            <label htmlFor="comp">Compensated?</label>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="vote"
+                                                checked={votingRights}
+                                                onChange={e => setVotingRights(e.target.checked)}
+                                                style={{ marginRight: "0.5rem" }}
+                                            />
+                                            <label htmlFor="vote">Voting?</label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </>
                     ) : (
                         <>
@@ -250,7 +282,15 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
 
                 {modifications.length > 0 && (
                     <div>
-                        <h3 className="font-semibold mb-2">Active Modifications</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <h3 className="font-semibold">Active Modifications</h3>
+                            <button
+                                onClick={handleClearAll}
+                                style={{ fontSize: '0.75rem', color: 'var(--destructive)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            >
+                                Clear All
+                            </button>
+                        </div>
                         <ul className="space-y-2">
                             {modifications.map((m, i) => {
                                 const p = initialPeople.find(px => px.id === m.personId)
@@ -258,9 +298,13 @@ export default function SimulationClient({ initialPeople, initialEntities }: Pro
                                 return (
                                     <li key={i} className="text-sm border p-2 rounded flex justify-between items-center bg-gray-50">
                                         <span>
-                                            {m.type === 'ADD' || m.type === 'REMOVE' ? (
+                                            {m.type === 'ADD' ? (
                                                 <>
-                                                    <span className="font-bold text-green-600">[{m.type}]</span> {p?.firstName} {p?.lastName} → {e?.legalName}
+                                                    <span className="font-bold text-green-600">[ADD]</span> {p?.firstName} {p?.lastName} → {e?.legalName}
+                                                </>
+                                            ) : m.type === 'REMOVE' ? (
+                                                <>
+                                                    <span className="font-bold text-red-600">[REMOVE]</span> {p?.firstName} {p?.lastName} ❌ {e?.legalName}
                                                 </>
                                             ) : (
                                                 <>

@@ -3,8 +3,20 @@
 import { prisma } from '@/lib/db'
 import Papa from 'papaparse'
 
-export async function generateEntityBoardReport() {
+export async function generateEntityBoardReport(status: 'ACTIVE' | 'INACTIVE' | 'ALL' = 'ALL') {
+    const whereClause: any = {}
+
+    if (status === 'ACTIVE') {
+        whereClause.OR = [
+            { endDate: null },
+            { endDate: { gt: new Date() } }
+        ]
+    } else if (status === 'INACTIVE') {
+        whereClause.endDate = { lte: new Date() }
+    }
+
     const roles = await prisma.boardRole.findMany({
+        where: whereClause,
         include: {
             entity: true,
             person: true
@@ -17,8 +29,15 @@ export async function generateEntityBoardReport() {
 
     const data = roles.map(role => ({
         EntityName: role.entity.legalName,
+        EIN: role.entity.ein || '',
         EntityType: role.entity.entityType,
+        StateOfInc: role.entity.stateOfIncorporation || '',
+        TaxClassification: role.entity.taxClassification || '',
+        FiscalYearEnd: role.entity.fiscalYearEnd || '',
+        SupportingOrgType: role.entity.supportingOrgType || '',
+        ParentAppointsBoard: role.entity.parentAppointsGoverningBody ? 'Yes' : 'No',
         DirectorName: `${role.person.firstName} ${role.person.lastName}`,
+        PersonInternalID: role.person.internalId || '',
         RoleTitle: role.title,
         RoleType: role.roleType,
         VotingRights: role.votingRights ? 'Yes' : 'No',
@@ -30,8 +49,20 @@ export async function generateEntityBoardReport() {
     return Papa.unparse(data)
 }
 
-export async function generatePersonBoardReport() {
+export async function generatePersonBoardReport(status: 'ACTIVE' | 'INACTIVE' | 'ALL' = 'ALL') {
+    const whereClause: any = {}
+
+    if (status === 'ACTIVE') {
+        whereClause.OR = [
+            { endDate: null },
+            { endDate: { gt: new Date() } }
+        ]
+    } else if (status === 'INACTIVE') {
+        whereClause.endDate = { lte: new Date() }
+    }
+
     const roles = await prisma.boardRole.findMany({
+        where: whereClause,
         include: {
             person: true,
             entity: true
@@ -45,10 +76,15 @@ export async function generatePersonBoardReport() {
     // Normalize data for people report
     const data = roles.map(role => ({
         PersonName: `${role.person.lastName}, ${role.person.firstName}`,
+        InternalID: role.person.internalId || '',
         EntityName: role.entity.legalName,
+        EIN: role.entity.ein || '',
         RoleTitle: role.title,
+        RoleType: role.roleType,
         StartDate: role.startDate ? role.startDate.toISOString().split('T')[0] : '',
-        EndDate: role.endDate ? role.endDate.toISOString().split('T')[0] : 'Active'
+        EndDate: role.endDate ? role.endDate.toISOString().split('T')[0] : 'Active',
+        VotingRights: role.votingRights ? 'Yes' : 'No',
+        Compensated: role.isCompensated ? 'Yes' : 'No'
     }))
 
     return Papa.unparse(data)
@@ -138,4 +174,21 @@ export async function getEntityReportData(entityId: string) {
     if (!entity) return null
 
     return entity
+}
+
+export async function fetchImageBase64(url: string) {
+    try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error('Failed to fetch image')
+
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const base64 = buffer.toString('base64')
+        const contentType = response.headers.get('content-type') || 'image/png'
+
+        return `data:${contentType};base64,${base64}`
+    } catch (e) {
+        console.error("Server image fetch failed", e)
+        return null
+    }
 }

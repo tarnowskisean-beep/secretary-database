@@ -4,19 +4,21 @@ import { generateEntityBoardReport, generatePersonBoardReport } from '@/server/a
 import Link from 'next/link'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { useState } from 'react'
 
 export default function ReportsPage() {
+    const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'INACTIVE' | 'ALL'>('ALL')
 
     const handleDownloadCSV = async (type: 'ENTITY' | 'PERSON') => {
         let csvData = ''
         let filename = ''
 
         if (type === 'ENTITY') {
-            csvData = await generateEntityBoardReport()
-            filename = `entity_boards_${new Date().toISOString().split('T')[0]}.csv`
+            csvData = await generateEntityBoardReport(statusFilter)
+            filename = `entity_boards_${statusFilter}_${new Date().toISOString().split('T')[0]}.csv`
         } else {
-            csvData = await generatePersonBoardReport()
-            filename = `person_boards_${new Date().toISOString().split('T')[0]}.csv`
+            csvData = await generatePersonBoardReport(statusFilter)
+            filename = `person_boards_${statusFilter}_${new Date().toISOString().split('T')[0]}.csv`
         }
 
         const blob = new Blob([csvData], { type: 'text/csv' })
@@ -46,7 +48,25 @@ export default function ReportsPage() {
 
                 {/* CSV SECTION */}
                 <section>
-                    <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>CSV Data Exports</h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>CSV Data Exports</h2>
+
+                        {/* Filter Control */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Status:</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as 'ACTIVE' | 'INACTIVE' | 'ALL')}
+                                className="input"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
+                            >
+                                <option value="ALL">All Records</option>
+                                <option value="ACTIVE">Active Only</option>
+                                <option value="INACTIVE">Inactive Only</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div style={{ display: "grid", gap: "1rem" }}>
                         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>

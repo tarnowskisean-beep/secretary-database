@@ -560,12 +560,12 @@ export async function simulateRisks(modifications: SimulationModification[]) {
 }
 
 export async function getScheduleRSummary(startDate?: Date, endDate?: Date) {
-    // 1. Fetch all owners table entries where pct > 50
+    // 1. Fetch all owners table entries where pct > 5 (Control + Significant Unrelated)
     // We join with Entity to get details
     const controlOwners = await prisma.entityOwner.findMany({
         where: {
-            percentage: { gt: 50 },
-            childEntity: { entityType: { not: '501(c)(3)' } }
+            percentage: { gt: 5 },
+            // Broadened to > 5% to capture Part VI Unrelated Partnerships
         },
         include: {
             childEntity: true,
@@ -580,28 +580,83 @@ export async function getScheduleRSummary(startDate?: Date, endDate?: Date) {
             : (o.ownerPerson ? `${o.ownerPerson.firstName} ${o.ownerPerson.lastName}` : 'Unknown')
     }
 
-    // Part I: Disregarded Entities (100% Ownership)
-    // Map to a struct that looks like an Entity for the UI
-    const disregardedEntities = controlOwners
-        .filter(o => o.percentage === 100)
-        .map(o => ({
-            ...o.childEntity,
-            ownershipPercentage: o.percentage, // Helper for UI
-            parentName: getParentName(o)
-        }))
+    // Helper to determine Schedule R Part
+    const categorizeEntity = (o: typeof controlOwners[0]) => {
+        const e = o.childEntity
+        const type = e.entityType || ''
+        const taxClass = e.taxClassification || ''
+        const isExempt = type === '501(c)(3)' || type === '501(c)(4)' || type === '527'
+        const isPartnership = type.includes('Partnership') || taxClass.includes('Partnership') || type.includes('LLC')
 
-    // Part III: Taxable Related Orgs (>50% but <100%)
-    const taxableRelatedOrgs = controlOwners
-        .filter(o => o.percentage < 100)
-        .map(o => ({
+        // CONTROLLED (> 50%)
+        if (o.percentage > 50) {
+            // Part II: Related Tax-Exempt Organizations
+            if (isExempt) return 'PART_II'
+
+            // Part I: Disregarded Entities
+            // Must be 100% owned AND (Tax Class = Disregarded OR (LLC and Not Corp/Partnership elected))
+            if (o.percentage === 100 && (taxClass === 'Disregarded' || type.includes('LLC'))) {
+                return 'PART_I'
+            }
+
+            // Part III: Related Partnerships
+            if (isPartnership) {
+                return 'PART_III'
+            }
+
+            // Part IV: Related Corporations / Trusts
+            return 'PART_IV'
+        }
+
+        // SIGNIFICANT UNRELATED (5% - 50%)
+        // Part VI: Unrelated Organizations Taxable as a Partnership
+        if (isPartnership) {
+            return 'PART_VI'
+        }
+
+        return null // Other <50% entities (e.g. minority stock in C-Corp) are not Schedule R reportable
+    }
+
+    const disregardedEntities: any[] = []
+    const relatedTaxExemptOrgs: any[] = []
+    const relatedPartnerships: any[] = []
+    const relatedCorpsTrusts: any[] = []
+    const unrelatedPartnerships: any[] = []
+
+    for (const o of controlOwners) {
+        const category = categorizeEntity(o)
+        if (!category) continue
+
+        const mapped = {
             ...o.childEntity,
             ownershipPercentage: o.percentage,
             parentName: getParentName(o)
-        }))
+        }
+
+        if (category === 'PART_I') disregardedEntities.push(mapped)
+        else if (category === 'PART_II') relatedTaxExemptOrgs.push(mapped)
+        else if (category === 'PART_III') relatedPartnerships.push(mapped)
+        else if (category === 'PART_IV') relatedCorpsTrusts.push(mapped)
+        else if (category === 'PART_VI') unrelatedPartnerships.push(mapped)
+    }
 
 
     // 2. Financial Transactions (Part V)
-    const transactionFilter: any = {}
+    // Only with RELATED organizations (Parts I-IV). Part VI is reported separately.
+    const relatedEntityIds = new Set([
+        ...disregardedEntities.map(e => e.id),
+        ...relatedTaxExemptOrgs.map(e => e.id),
+        ...relatedPartnerships.map(e => e.id),
+        ...relatedCorpsTrusts.map(e => e.id)
+    ])
+
+    const transactionFilter: any = {
+        OR: [
+            { fromEntityId: { in: Array.from(relatedEntityIds) } },
+            { toEntityId: { in: Array.from(relatedEntityIds) } }
+        ]
+    }
+
     if (startDate && endDate) {
         transactionFilter.date = {
             gte: startDate,
@@ -654,8 +709,14 @@ export async function getScheduleRSummary(startDate?: Date, endDate?: Date) {
     return {
         disregardedCount: disregardedEntities.length,
         disregardedEntities,
-        taxableCount: taxableRelatedOrgs.length,
-        taxableRelatedOrgs,
+        relatedTaxExemptCount: relatedTaxExemptOrgs.length,
+        relatedTaxExemptOrgs,
+        relatedPartnershipCount: relatedPartnerships.length,
+        relatedPartnerships,
+        relatedCorpTrustCount: relatedCorpsTrusts.length,
+        relatedCorpsTrusts,
+        unrelatedPartnershipCount: unrelatedPartnerships.length,
+        unrelatedPartnerships,
         transactionCount: transactions.length,
         reportableTransactionCount,
         transactions,
