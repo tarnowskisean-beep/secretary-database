@@ -14,6 +14,25 @@ export default async function Home() {
         <p style={{ color: "var(--muted-foreground)", fontSize: "1.1rem" }}>
           Real-time oversight of corporate structure, board composition, and compliance risks.
         </p>
+
+        {/* Connection Error Banner */}
+        {stats.counts.entities === 0 && stats.counts.people === 0 && (
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: '#fee2e2',
+            border: '1px solid #ef4444',
+            borderRadius: '0.5rem',
+            color: '#b91c1c',
+            display: 'flex', alignItems: 'center', gap: '1rem'
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+            <div>
+              <strong>Connection Error:</strong> Unable to fetch data from the database.
+              Please check Vercel Logs for "Dashboard Stats Error".
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Key Metrics Grid */}
