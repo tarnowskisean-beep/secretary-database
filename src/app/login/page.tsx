@@ -38,11 +38,11 @@ export default function LoginPage() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', // Premium Slate Gradient
+            background: '#000000', // Pure Black Background
             padding: '20px'
         }}>
             {/* Main Card */}
-            <div className="card" style={{ maxWidth: '450px', width: '100%', padding: '0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <div className="card" style={{ maxWidth: '450px', width: '100%', padding: '0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(255, 255, 255, 0.1), 0 10px 10px -5px rgba(255, 255, 255, 0.04)' }}>
                 <div style={{ padding: '40px 40px 30px', borderBottom: '1px solid var(--border)', background: 'white' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                         {/* Logo Section */}
@@ -129,14 +129,6 @@ export default function LoginPage() {
                         </div>
                     </form>
                 </div>
-
-                <div style={{ background: '#f8fafc', padding: '16px 40px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ height: '8px', width: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>System Operational</span>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>SOC 2 Compliant</span>
-                </div>
             </div>
 
             {/* Footer */}
@@ -144,7 +136,7 @@ export default function LoginPage() {
                 <p>&copy; {new Date().getFullYear()} Compass Professional. All rights reserved.</p>
                 <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center', gap: '16px' }}>
                     <a href="#" style={{ transition: 'color 0.2s', textDecoration: 'none' }}>Privacy Policy</a>
-                    <span style={{ color: '#cbd5e1' }}>•</span>
+                    <span style={{ color: '#333' }}>•</span>
                     <a href="#" style={{ transition: 'color 0.2s', textDecoration: 'none' }}>Terms of Service</a>
                 </div>
             </div>
