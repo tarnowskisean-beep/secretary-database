@@ -26,21 +26,47 @@ export async function createUser(formData: unknown) {
         const supabase = createAdminClient();
 
         // 1. Create in Supabase Auth
+        let userId = '';
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
             email,
             password,
-            email_confirm: true // Auto-confirm for admin-created users
+            email_confirm: true
         });
 
-        if (authError || !authUser.user) {
-            console.error("Supabase Auth Error:", authError);
-            return { success: false, error: authError?.message || "Failed to create user in Auth" };
+        if (authError) {
+            // Check if user already exists
+            if (authError.message.includes('already has been registered') || authError.status === 422) {
+                // Try to find the existing user
+                const { data: { users } } = await supabase.auth.admin.listUsers();
+                const existing = users.find(u => u.email === email);
+
+                if (existing) {
+                    userId = existing.id;
+                    // Check if they are already in our DB (User table)
+                    const dbUser = await db.user.findUnique({ where: { id: userId } });
+                    if (dbUser) {
+                        return { success: false, error: "User already exists in the system completely." };
+                    }
+                    // If not in DB, we proceed to creating the DB record using this ID.
+                } else {
+                    return { success: false, error: "User email taken but not found. Weird state." };
+                }
+            } else {
+                console.error("Supabase Auth Error:", authError);
+                return { success: false, error: authError.message || "Failed to create user in Auth" };
+            }
+        } else if (authUser.user) {
+            userId = authUser.user.id;
+        }
+
+        if (!userId) {
+            return { success: false, error: "Failed to resolve User ID" };
         }
 
         // 2. Create in Prisma DB
         await db.user.create({
             data: {
-                id: authUser.user.id,
+                id: userId,
                 email: email,
                 role: role
             }
@@ -51,8 +77,8 @@ export async function createUser(formData: unknown) {
             data: {
                 action: "CREATE",
                 resource: "User",
-                resourceId: authUser.user.id,
-                details: `Created user ${email} with role ${role}`
+                resourceId: userId,
+                details: `Created (or linked) user ${email} with role ${role}`
             }
         });
 
