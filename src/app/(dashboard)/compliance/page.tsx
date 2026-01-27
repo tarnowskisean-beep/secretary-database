@@ -181,10 +181,18 @@ export default async function CompliancePage(props: {
                         <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{scheduleRStats.disregardedCount}</div>
                     </div>
                     <div>
+                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part II: Related Tax-Exempt</div>
+                        <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{scheduleRStats.relatedTaxExemptCount}</div>
+                    </div>
+                    <div>
                         <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part III: Related Partnerships</div>
                         <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: scheduleRStats.relatedPartnershipCount > 0 ? "var(--warning)" : "inherit" }}>
                             {scheduleRStats.relatedPartnershipCount}
                         </div>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part IV: Related Corps</div>
+                        <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{scheduleRStats.relatedCorpTrustCount}</div>
                     </div>
                     <div>
                         <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Part V Transaction Volume</div>
