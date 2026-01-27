@@ -98,8 +98,7 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
             addText("State of Formation:", data.stateOfIncorporation || 'N/A', 15, y)
             addText("Tax Classification:", data.taxClassification || 'N/A', 100, y)
             y += 6
-            addText("Fiscal Year End:", data.fiscalYearEnd || 'N/A', 15, y)
-            addText("Status:", "Active", 100, y) // Placeholder if status isn't in data
+            // addText("Fiscal Year End:", data.fiscalYearEnd || 'N/A', 15, y)
             y += 15
 
 

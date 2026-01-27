@@ -236,10 +236,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                                 <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>State of Inc.</dt>
                                 <dd>{entity.stateOfIncorporation || "N/A"}</dd>
                             </div>
-                            <div>
-                                <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Fiscal Year End</dt>
-                                <dd>{entity.fiscalYearEnd || "N/A"}</dd>
-                            </div>
+
                             <div>
                                 <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Tax Classification</dt>
                                 <dd><span className="badge badge-outline">{entity.taxClassification || "N/A"}</span></dd>
