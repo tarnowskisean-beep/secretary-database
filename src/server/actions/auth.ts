@@ -64,3 +64,23 @@ export async function syncUser() {
         return { success: false, error: "Database sync failed" }
     }
 }
+
+export async function requireAdmin() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error("Unauthorized")
+    }
+
+    const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+    })
+
+    if (!dbUser || dbUser.role !== 'ADMIN') {
+        throw new Error("Forbidden: Admin access required")
+    }
+
+    return user
+}

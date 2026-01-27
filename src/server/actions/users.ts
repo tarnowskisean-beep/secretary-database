@@ -4,6 +4,7 @@ import { prisma as db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { requireAdmin } from "@/server/actions/auth";
 import { z } from "zod";
 
 const CreateUserSchema = z.object({
@@ -14,6 +15,7 @@ const CreateUserSchema = z.object({
 
 export async function createUser(formData: unknown) {
     try {
+        await requireAdmin()
         const result = CreateUserSchema.safeParse(formData);
 
         if (!result.success) {
@@ -80,6 +82,7 @@ export async function createAuditLog(data: { action: string, resource: string, r
 
 export async function getAuditLogs(userId?: string, action?: string) {
     try {
+        await requireAdmin()
         const where: any = {};
         if (userId) where.userId = userId;
         if (action) where.action = action;
@@ -99,6 +102,7 @@ export async function getAuditLogs(userId?: string, action?: string) {
 
 export async function getUsers() {
     try {
+        await requireAdmin()
         const users = await db.user.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
@@ -116,6 +120,7 @@ export async function getUsers() {
 
 export async function updateUserRole(userId: string, newRole: UserRole) {
     try {
+        await requireAdmin()
         await db.user.update({
             where: { id: userId },
             data: { role: newRole }
@@ -130,6 +135,7 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 
 export async function deleteUser(userId: string) {
     try {
+        await requireAdmin()
         // Note: This only deletes from Prisma. Actual Auth user must be deleted in Supabase Dashboard.
         await db.user.delete({
             where: { id: userId }
