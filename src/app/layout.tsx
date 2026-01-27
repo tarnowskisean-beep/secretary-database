@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AppLayout from "@/components/AppLayout";
+
 
 export const metadata: Metadata = {
   title: "Compass Professional",
@@ -15,9 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <AppLayout>
-          {children}
-        </AppLayout>
+        {children}
       </body>
     </html>
   );
