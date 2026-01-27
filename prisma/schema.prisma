@@ -156,3 +156,42 @@ model RelatedTransaction {
   @@index([fromEntityId])
   @@index([toEntityId])
 }
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id            String    @id // Supabase Auth ID
+  email         String    @unique
+  role          UserRole  @default(VIEWER)
+  
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  auditLogs     AuditLog[]
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  
+  action        String   // "CREATE", "UPDATE", "DELETE", "LOGIN"
+  resource      String   // "Entity", "Person", "BoardRole"
+  resourceId    String?  // ID of the object changed
+  details       String?  // JSON string or summary of change
+  
+  ipAddress     String?
+  userAgent     String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([resource])
+  @@index([createdAt])
+}
