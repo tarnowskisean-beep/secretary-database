@@ -12,7 +12,7 @@ const RoleSchema = z.object({
     startDate: z.string().optional(),
     votingRights: z.coerce.boolean(),
     isCompensated: z.coerce.boolean(),
-    appointmentDocUrl: z.string().url("Must be a valid URL").min(1, "Appointment Board Resolution is required"),
+    appointmentDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional().nullable(),
 })
 
 export async function createRole(personId: string, prevState: FormState, formData: FormData) {

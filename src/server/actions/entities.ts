@@ -210,6 +210,26 @@ export async function updateEntity(id: string, prevState: FormState, formData: F
     redirect(`/entities/${id}`)
 }
 
+import { isSimilar } from '@/lib/string-utils'
+
+export async function checkEntityDuplicate(legalName: string) {
+    // 1. Broad search: Entities starting with same first 3 letters
+    const prefix = legalName.substring(0, 3)
+    const candidates = await prisma.entity.findMany({
+        where: {
+            legalName: { startsWith: prefix, mode: 'insensitive' }
+        },
+        select: { id: true, legalName: true, ein: true }
+    })
+
+    // 2. Refine
+    const duplicates = candidates.filter(c => {
+        return isSimilar(legalName, c.legalName, 4) || c.legalName.toLowerCase().includes(legalName.toLowerCase()) || legalName.toLowerCase().includes(c.legalName.toLowerCase())
+    })
+
+    return duplicates
+}
+
 const TransactionSchema = z.object({
     fromEntityId: z.string().uuid(),
     toEntityId: z.string().uuid(),

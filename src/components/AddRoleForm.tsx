@@ -1,14 +1,38 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState, useRef } from 'react'
 import { createRole } from '@/server/actions/roles'
 
 export default function AddRoleForm({ personId, entities }: { personId: string, entities: { id: string, legalName: string, entityType: string }[] }) {
     const createRoleWithId = createRole.bind(null, personId)
     const [state, formAction] = useActionState(createRoleWithId, { message: '', errors: {} })
 
+    // State to track if we are in the "warning" phase
+    const [showDocWarning, setShowDocWarning] = useState(false)
+    const docInputRef = useRef<HTMLInputElement>(null)
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        const docUrl = docInputRef.current?.value
+
+        // If no URL and we haven't warned yet, stop and warn
+        if (!docUrl && !showDocWarning) {
+            e.preventDefault()
+            setShowDocWarning(true)
+            return
+        }
+
+        // Otherwise (has URL OR already warned), let it submit naturally via action
+        // The form action will run automatically if we don't preventDefault
+        // But we need to make sure we don't double-submit if we are just "unblocking" the warning
+    }
+
+    // Reset warning if user starts typing
+    const handleDocChange = () => {
+        if (showDocWarning) setShowDocWarning(false)
+    }
+
     return (
-        <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <form action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label htmlFor="entityId" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Entity</label>
                 <select name="entityId" id="entityId" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }}>
@@ -42,13 +66,21 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label htmlFor="appointmentDocUrl" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Appointment Document URL</label>
                 <input
+                    ref={docInputRef}
+                    onChange={handleDocChange}
                     type="url"
                     name="appointmentDocUrl"
                     id="appointmentDocUrl"
                     placeholder="https://drive.google.com/..."
-                    required
-                    style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }}
+                    // required attribute removed
+                    style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%", borderColor: showDocWarning ? "var(--warning)" : "var(--input)" }}
                 />
+
+                {showDocWarning && (
+                    <div style={{ fontSize: "0.75rem", color: "var(--warning)", background: "rgba(245, 158, 11, 0.1)", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--warning)" }}>
+                        ⚠️ No document attached. This is not recommended. Click <strong>Add Role</strong> again to confirm.
+                    </div>
+                )}
 
                 {state?.errors?.appointmentDocUrl && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.appointmentDocUrl[0]}</p>}
             </div>
@@ -65,8 +97,8 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
             </div>
 
             <div style={{ marginTop: "0.5rem" }}>
-                <button type="submit" style={{ width: "100%", padding: "0.5rem 1rem", background: "var(--primary)", color: "var(--primary-foreground)", borderRadius: "var(--radius)", border: "none", fontWeight: 500, cursor: "pointer" }}>
-                    Add Role
+                <button type="submit" style={{ width: "100%", padding: "0.5rem 1rem", background: showDocWarning ? "var(--warning)" : "var(--primary)", color: showDocWarning ? "black" : "var(--primary-foreground)", borderRadius: "var(--radius)", border: "none", fontWeight: 500, cursor: "pointer" }}>
+                    {showDocWarning ? "Confirm Without Document" : "Add Role"}
                 </button>
                 {state?.message && <span style={{ display: "block", marginTop: "0.5rem", fontSize: "0.875rem" }}>{state.message}</span>}
             </div>
