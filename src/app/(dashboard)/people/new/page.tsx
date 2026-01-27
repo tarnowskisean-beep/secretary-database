@@ -1,8 +1,7 @@
-
 'use client'
 
 import { createPerson, checkPersonDuplicate } from '@/server/actions/people'
-import { useActionState, useState, useRef } from 'react'
+import { useActionState, useState, useRef, startTransition } from 'react'
 import Link from 'next/link'
 
 const initialState = {
@@ -14,37 +13,50 @@ export default function NewPersonPage() {
     const [state, formAction] = useActionState(createPerson, initialState)
     const [candidates, setCandidates] = useState<{ id: string, firstName: string, lastName: string }[]>([])
     const [showWarning, setShowWarning] = useState(false)
-    const skipCheckRef = useRef(false)
+    const formRef = useRef<HTMLFormElement>(null)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        // If we already passed check or are ignoring warning, allow submit
-        if (skipCheckRef.current || showWarning) {
-            skipCheckRef.current = true // Ensure we skip check on the actual submit
-            return // Let the default submission happen (or requestSubmit if called manually)
-        }
-
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
         const firstName = formData.get('firstName') as string
         const lastName = formData.get('lastName') as string
 
-        if (!firstName || !lastName || firstName.length < 2) {
-            // Let server validation handle basic errors, skip check
-            skipCheckRef.current = true
-            e.currentTarget.requestSubmit()
+        // If warning is already shown, user clicked "Ignore & Create"
+        if (showWarning) {
+            console.log("Ignoring warning, submitting...")
+            startTransition(() => {
+                formAction(formData)
+            })
             return
         }
 
-        // Check duplicates
-        const duplicates = await checkPersonDuplicate(firstName, lastName)
+        // Basic validation
+        if (!firstName || !lastName || firstName.length < 2) {
+            startTransition(() => {
+                formAction(formData)
+            })
+            return
+        }
 
-        if (duplicates.length > 0) {
-            setCandidates(duplicates)
-            setShowWarning(true)
-        } else {
-            // No duplicates, proceed
-            skipCheckRef.current = true
-            e.currentTarget.requestSubmit()
+        try {
+            console.log("Checking duplicates...")
+            const duplicates = await checkPersonDuplicate(firstName, lastName)
+
+            if (duplicates.length > 0) {
+                console.log("Duplicates found:", duplicates)
+                setCandidates(duplicates)
+                setShowWarning(true)
+            } else {
+                console.log("No duplicates, submitting...")
+                startTransition(() => {
+                    formAction(formData)
+                })
+            }
+        } catch (error) {
+            console.error("Check failed, submitting anyway:", error)
+            startTransition(() => {
+                formAction(formData)
+            })
         }
     }
 
@@ -57,7 +69,7 @@ export default function NewPersonPage() {
                 <h1 style={{ marginTop: "0.5rem" }}>New Person</h1>
             </header>
 
-            <form action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            <form ref={formRef} action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
