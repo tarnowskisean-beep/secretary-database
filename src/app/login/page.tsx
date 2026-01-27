@@ -32,43 +32,57 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', // Premium Slate Gradient
+            padding: '20px'
+        }}>
             {/* Main Card */}
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-                <div className="p-10 pb-8 border-b border-slate-100">
-                    <div className="flex flex-col items-center text-center">
+            <div className="card" style={{ maxWidth: '450px', width: '100%', padding: '0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+                <div style={{ padding: '40px 40px 30px', borderBottom: '1px solid var(--border)', background: 'white' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                         {/* Logo Section */}
-                        <div className="mb-8 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div style={{ marginBottom: '24px', padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', background: '#f8fafc' }}>
                             <img
                                 src="/logo.png"
                                 alt="Compass Professional Logo"
-                                className="h-12 w-auto object-contain grayscale opacity-90 hover:grayscale-0 transition-all duration-500"
+                                style={{ height: '48px', width: 'auto', filter: 'grayscale(100%)', opacity: 0.9 }}
                             />
                         </div>
 
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--foreground)', margin: '0 0 8px 0' }}>
                             Governance Intelligence
                         </h2>
-                        <p className="mt-2 text-sm text-slate-500 font-medium">
+                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', fontWeight: '500' }}>
                             Secure Client Compass Portal
                         </p>
                     </div>
                 </div>
 
-                <div className="p-10 pt-8">
+                <div style={{ padding: '40px' }}>
                     {error && (
-                        <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-lg text-sm flex items-center gap-3 border border-red-100 shadow-sm">
-                            <svg className="h-5 w-5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        <div style={{
+                            marginBottom: '24px',
+                            background: '#fef2f2',
+                            color: '#b91c1c',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            border: '1px solid #fecaca',
+                            textAlign: 'center'
+                        }}>
                             {error}
                         </div>
                     )}
 
-                    <form className="space-y-6" onSubmit={handleLogin}>
-                        <div className="space-y-4">
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
-                                <label htmlFor="email-address" className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">
+                                <label htmlFor="email-address" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                                     Email Address
                                 </label>
                                 <input
@@ -77,14 +91,15 @@ export default function LoginPage() {
                                     type="email"
                                     autoComplete="email"
                                     required
-                                    className="appearance-none block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all hover:bg-white text-sm"
+                                    className="input"
                                     placeholder="name@company.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    style={{ padding: '12px 16px', fontSize: '0.95rem' }}
                                 />
                             </div>
                             <div>
-                                <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">
+                                <label htmlFor="password" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                                     Password
                                 </label>
                                 <input
@@ -93,10 +108,11 @@ export default function LoginPage() {
                                     type="password"
                                     autoComplete="current-password"
                                     required
-                                    className="appearance-none block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all hover:bg-white text-sm"
+                                    className="input"
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    style={{ padding: '12px 16px', fontSize: '0.95rem' }}
                                 />
                             </div>
                         </div>
@@ -105,40 +121,31 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]"
+                                className="btn btn-primary"
+                                style={{ width: '100%', padding: '14px', fontSize: '0.95rem', fontWeight: '600' }}
                             >
-                                {loading ? (
-                                    <span className="flex items-center gap-2">
-                                        <svg className="animate-spin h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Verifying Credentials...
-                                    </span>
-                                ) : (
-                                    'Sign In to Dashboard'
-                                )}
+                                {loading ? 'Verifying Credentials...' : 'Sign In to Dashboard'}
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <div className="bg-slate-50 px-10 py-4 border-t border-slate-100 flex justify-between items-center">
-                    <div className="flex items-center gap-1.5">
-                        <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">System Operational</span>
+                <div style={{ background: '#f8fafc', padding: '16px 40px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ height: '8px', width: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>System Operational</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">SOC 2 Compliant</span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>SOC 2 Compliant</span>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-8 text-center text-slate-500 text-xs">
+            <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.75rem', color: '#64748b' }}>
                 <p>&copy; {new Date().getFullYear()} Compass Professional. All rights reserved.</p>
-                <div className="mt-2 flex justify-center gap-4">
-                    <a href="#" className="hover:text-slate-800 transition-colors">Privacy Policy</a>
-                    <span className="text-slate-300">•</span>
-                    <a href="#" className="hover:text-slate-800 transition-colors">Terms of Service</a>
+                <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                    <a href="#" style={{ transition: 'color 0.2s', textDecoration: 'none' }}>Privacy Policy</a>
+                    <span style={{ color: '#cbd5e1' }}>•</span>
+                    <a href="#" style={{ transition: 'color 0.2s', textDecoration: 'none' }}>Terms of Service</a>
                 </div>
             </div>
         </div>
