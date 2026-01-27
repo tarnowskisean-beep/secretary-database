@@ -7,6 +7,7 @@ import EntityNameHeader from '@/components/EntityNameHeader'
 import NameHistoryList from '@/components/NameHistoryList'
 import AttachmentsCard from '@/components/AttachmentsCard'
 import EntityReportButton from '@/components/EntityReportButton'
+import EditRoleDialog from '@/components/EditRoleDialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -189,6 +190,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                                             <th>Title</th>
                                             <th>Voting</th>
                                             <th>Documents</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -207,6 +209,16 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                                                             View Doc
                                                         </a>
                                                     )}
+                                                </td>
+                                                <td>
+                                                    <EditRoleDialog role={{
+                                                        ...role,
+                                                        personId: role.person.id,
+                                                        entityId: entity.id,
+                                                        startDate: role.startDate ?? null,
+                                                        endDate: role.endDate ?? null,
+                                                        appointmentDocUrl: role.appointmentDocUrl ?? null
+                                                    }} />
                                                 </td>
                                             </tr>
                                         ))}

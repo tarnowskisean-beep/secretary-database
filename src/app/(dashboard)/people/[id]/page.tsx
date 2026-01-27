@@ -37,6 +37,7 @@ import PersonReportButton from '@/components/PersonReportButton'
 import PersonDeleteButton from '@/components/PersonDeleteButton'
 import AddRelationshipForm from '@/components/AddRelationshipForm'
 import AddRoleForm from '@/components/AddRoleForm'
+import EditRoleDialog from '@/components/EditRoleDialog'
 import EndRoleDialog from '@/components/EndRoleDialog'
 import PersonNameHeader from '@/components/PersonNameHeader'
 import NameHistoryList from '@/components/NameHistoryList'
@@ -187,7 +188,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
 }
 
 // Client Component for the form to handle state
-function RolesTable({ roles, personId, isActive }: { roles: { id: string, title: string, roleType: string, votingRights: boolean, isCompensated: boolean, appointmentDocUrl?: string | null, resignationDocUrl?: string | null, endDate?: Date | null, entity: { id: string, legalName: string, owners: { percentage: number }[] } }[], personId: string, isActive: boolean }) {
+function RolesTable({ roles, personId, isActive }: { roles: { id: string, title: string, roleType: string, votingRights: boolean, isCompensated: boolean, appointmentDocUrl?: string | null, resignationDocUrl?: string | null, startDate?: Date | null, endDate?: Date | null, entity: { id: string, legalName: string, owners: { percentage: number }[] } }[], personId: string, isActive: boolean }) {
     return (
         <div className="table-container">
             <table>
@@ -238,7 +239,18 @@ function RolesTable({ roles, personId, isActive }: { roles: { id: string, title:
                                 </td>
                                 <td>
                                     {isActive ? (
-                                        <EndRoleDialog roleId={role.id} personId={personId} />
+                                        <div style={{ display: "flex", gap: "0.5rem" }}>
+
+                                            <EditRoleDialog role={{
+                                                ...role,
+                                                personId,
+                                                startDate: role.startDate ?? null,
+                                                endDate: role.endDate ?? null,
+                                                appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                                entityId: role.entity.id
+                                            }} />
+                                            <EndRoleDialog roleId={role.id} personId={personId} />
+                                        </div>
                                     ) : (
                                         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                                             <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
