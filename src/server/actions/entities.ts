@@ -90,6 +90,12 @@ export async function getEntity(id: string) {
             transactionsIn: {
                 include: { fromEntity: true },
                 orderBy: { date: 'desc' }
+            },
+            nameChanges: {
+                orderBy: { changeDate: 'desc' }
+            },
+            attachments: {
+                orderBy: { createdAt: 'desc' }
             }
         }
     })
@@ -285,4 +291,55 @@ export async function createTransaction(prevState: FormState, formData: FormData
     revalidatePath(`/entities/${validated.data.fromEntityId}`)
     revalidatePath(`/entities/${validated.data.toEntityId}`)
     return { message: "Transaction created", success: true }
+}
+
+const EntityNameChangeSchema = z.object({
+    entityId: z.string().uuid(),
+    legalName: z.string().min(1),
+    documentUrl: z.string().optional(),
+    effectiveDate: z.coerce.date().optional()
+})
+
+export async function changeEntityName(prevState: FormState, formData: FormData) {
+    const data = Object.fromEntries(formData.entries())
+    const validated = EntityNameChangeSchema.safeParse(data)
+
+    if (!validated.success) {
+        return { message: "Invalid name change data" }
+    }
+
+    const { entityId, legalName, documentUrl, effectiveDate } = validated.data
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 1. Get old name
+            const current = await tx.entity.findUniqueOrThrow({ where: { id: entityId } })
+
+            // 2. Update Entity
+            await tx.entity.update({
+                where: { id: entityId },
+                data: { legalName }
+            })
+
+            // 3. Create History
+            await tx.nameChange.create({
+                data: {
+                    entityId,
+                    oldName: current.legalName,
+                    newName: legalName,
+                    documentUrl,
+                    effectiveDate
+                }
+            })
+        })
+
+        await logAuditAction("UPDATE", "Entity", entityId, `Changed legal name to ${legalName}`)
+
+        revalidatePath(`/entities/${entityId}`)
+        return { success: true, message: "Legal name changed successfully" }
+
+    } catch (e) {
+        console.error("Entity Name Change Error:", e)
+        return { message: "Failed to change entity name" }
+    }
 }

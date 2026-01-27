@@ -22,6 +22,9 @@ async function getPerson(id: string) {
             },
             relationshipsAsPerson2: {
                 include: { person1: true }
+            },
+            nameChanges: {
+                orderBy: { changeDate: 'desc' }
             }
         }
     })
@@ -32,7 +35,10 @@ import PersonDeleteButton from '@/components/PersonDeleteButton'
 import AddRelationshipForm from '@/components/AddRelationshipForm'
 import AddRoleForm from '@/components/AddRoleForm'
 import EndRoleDialog from '@/components/EndRoleDialog'
+import PersonNameHeader from '@/components/PersonNameHeader'
+import NameHistoryList from '@/components/NameHistoryList'
 import { getPeople } from '@/server/actions/people'
+import AttachmentsCard from '@/components/AttachmentsCard'
 
 export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
     // ... same content ...
@@ -64,21 +70,12 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                     Back to People
                 </Link>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                        <div style={{
-                            width: "64px", height: "64px", borderRadius: "50%",
-                            background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-foreground) 100%)",
-                            color: "white", fontSize: "1.5rem", fontWeight: "bold",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            border: "2px solid var(--background)", boxShadow: "0 0 0 1px var(--border)"
-                        }}>
-                            {person.firstName[0]}{person.lastName[0]}
-                        </div>
-                        <div>
-                            <h1 style={{ margin: 0, fontSize: "2rem" }}>{person.firstName} {person.lastName}</h1>
-                            {person.internalId && <p style={{ color: "var(--muted-foreground)", marginTop: "0.25rem" }}>ID: {person.internalId}</p>}
-                        </div>
-                    </div>
+                    <PersonNameHeader
+                        personId={person.id}
+                        firstName={person.firstName}
+                        lastName={person.lastName}
+                        internalId={person.internalId}
+                    />
                     <PersonReportButton personId={person.id} />
                 </div>
             </header>
@@ -145,6 +142,10 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                             <RolesTable roles={pastRoles} personId={person.id} isActive={false} />
                         </div>
                     )}
+                </div>
+
+                <div className="card">
+                    <NameHistoryList history={person.nameChanges} />
                 </div>
 
                 {/* Sidebar Column */}

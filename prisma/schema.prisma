@@ -56,6 +56,9 @@ model Entity {
   transactionsOut   RelatedTransaction[] @relation("FromEntity")
   transactionsIn    RelatedTransaction[] @relation("ToEntity")
 
+  nameChanges       NameChange[]
+  attachments       Attachment[]
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -103,6 +106,8 @@ model Person {
   relationshipsAsPerson2 Relationship[] @relation("Person2")
 
   ownerships  EntityOwner[] @relation("PersonOwner")
+  nameChanges NameChange[]
+  attachments Attachment[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -219,4 +224,48 @@ model AuditLog {
   @@index([userId])
   @@index([resource])
   @@index([createdAt])
+}
+
+model NameChange {
+  id          String   @id @default(uuid())
+  
+  // Polymorphic-style relation (one must be set)
+  personId    String?
+  person      Person?  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  entityId    String?
+  entity      Entity?  @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  
+  oldName     String
+  newName     String
+  documentUrl String?  // URL/Base64 of the supporting PDF/Image
+  
+  changedBy   String?  // User ID who made the change
+  changeDate  DateTime @default(now()) // When the change happened successfully
+  effectiveDate DateTime? // Optional: When the name change is legally effective
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([personId])
+  @@index([entityId])
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  
+  // Polymorphic-style relation
+  personId    String?
+  person      Person?  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  entityId    String?
+  entity      Entity?  @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  
+  title       String   
+  url         String   
+  type        String   @default("LINK") // "LINK", "FILE"
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([personId])
+  @@index([entityId])
 }

@@ -3,6 +3,9 @@ import { getEntity, getEntities } from '@/server/actions/entities'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import AddTransactionForm from '@/components/AddTransactionForm'
+import EntityNameHeader from '@/components/EntityNameHeader'
+import NameHistoryList from '@/components/NameHistoryList'
+import AttachmentsCard from '@/components/AttachmentsCard'
 import EntityReportButton from '@/components/EntityReportButton'
 
 export const dynamic = 'force-dynamic'
@@ -29,21 +32,12 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     Back to Entities
                 </Link>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                        {entity.logoUrl ? (
-                            <img src={entity.logoUrl} alt="Logo" style={{ width: "64px", height: "64px", objectFit: "contain", borderRadius: "var(--radius)", background: "white", padding: "0.5rem", border: "1px solid var(--border)" }} />
-                        ) : (
-                            <div style={{ width: "64px", height: "64px", borderRadius: "var(--radius)", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>🏢</div>
-                        )}
-                        <div>
-                            <h1 style={{ margin: 0, fontSize: "2rem" }}>{entity.legalName}</h1>
-                            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                                <span className="badge badge-secondary">{entity.entityType}</span>
-                                {isSubsidiary && <span className="badge badge-warning">Subsidiary</span>}
-                                {isParent && <span className="badge badge-primary">Parent Company</span>}
-                            </div>
-                        </div>
-                    </div>
+                    <EntityNameHeader
+                        entityId={entity.id}
+                        legalName={entity.legalName}
+                        logoUrl={entity.logoUrl}
+                        type={entity.entityType}
+                    />
                     <div style={{ display: "flex", gap: "0.5rem" }}>
                         <EntityReportButton entityId={entity.id} />
                         <Link href={`/entities/${entity.id}/edit`} className="btn btn-secondary">
@@ -223,58 +217,65 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     </div>
                 </div>
 
-                {/* Sidebar Info */}
-                <aside style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "sticky", top: "2rem" }}>
-                    <div className="card">
-                        <h3 style={{ fontSize: "1rem", marginBottom: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Entity Details</h3>
-                        <dl style={{ display: "grid", gap: "1rem", fontSize: "0.875rem" }}>
-                            <div>
-                                <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>EIN</dt>
-                                <dd style={{ fontFamily: "monospace", fontSize: "1rem" }}>{entity.ein || "N/A"}</dd>
-                            </div>
-                            <div>
-                                <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>State of Inc.</dt>
-                                <dd>{entity.stateOfIncorporation || "N/A"}</dd>
-                            </div>
-
-                            <div>
-                                <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Tax Classification</dt>
-                                <dd><span className="badge badge-outline">{entity.taxClassification || "N/A"}</span></dd>
-                            </div>
-
-                            {/* Schedule R Fields */}
-                            {(entity.owners.length > 0 || entity.supportingOrgType) && (
-                                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "0.5rem" }}>
-                                    <div style={{ marginBottom: "0.5rem", fontWeight: 600, color: "var(--foreground)" }}>Schedule R Data</div>
-
-                                    {entity.owners.length > 0 && (
-                                        <div style={{ marginBottom: "0.5rem" }}>
-                                            <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Owned By</dt>
-                                            <dd>
-                                                <ul style={{ paddingLeft: "1rem", margin: 0 }}>
-                                                    {entity.owners.map(o => (
-                                                        <li key={o.id}>
-                                                            {o.ownerEntity ? o.ownerEntity.legalName : (o.ownerPerson ? `${o.ownerPerson.firstName} ${o.ownerPerson.lastName}` : 'Unknown')}
-                                                            : <strong>{o.percentage}%</strong>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </dd>
-                                        </div>
-                                    )}
-
-                                    {entity.supportingOrgType && (
-                                        <div>
-                                            <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Support Type</dt>
-                                            <dd className="badge badge-warning" style={{ width: "100%", justifyContent: "center" }}>{entity.supportingOrgType}</dd>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </dl>
-                    </div>
-                </aside>
+                {/* Attachments Section */}
+                <AttachmentsCard attachments={entity.attachments} entityId={entity.id} />
             </div>
-        </div>
+
+            {/* Sidebar Info */}
+            <aside style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "sticky", top: "2rem" }}>
+                <div className="card">
+                    <NameHistoryList history={entity.nameChanges} />
+                </div>
+
+                <div className="card">
+                    <h3 style={{ fontSize: "1rem", marginBottom: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Entity Details</h3>
+                    <dl style={{ display: "grid", gap: "1rem", fontSize: "0.875rem" }}>
+                        <div>
+                            <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>EIN</dt>
+                            <dd style={{ fontFamily: "monospace", fontSize: "1rem" }}>{entity.ein || "N/A"}</dd>
+                        </div>
+                        <div>
+                            <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>State of Inc.</dt>
+                            <dd>{entity.stateOfIncorporation || "N/A"}</dd>
+                        </div>
+
+                        <div>
+                            <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Tax Classification</dt>
+                            <dd><span className="badge badge-outline">{entity.taxClassification || "N/A"}</span></dd>
+                        </div>
+
+                        {/* Schedule R Fields */}
+                        {(entity.owners.length > 0 || entity.supportingOrgType) && (
+                            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "0.5rem" }}>
+                                <div style={{ marginBottom: "0.5rem", fontWeight: 600, color: "var(--foreground)" }}>Schedule R Data</div>
+
+                                {entity.owners.length > 0 && (
+                                    <div style={{ marginBottom: "0.5rem" }}>
+                                        <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Owned By</dt>
+                                        <dd>
+                                            <ul style={{ paddingLeft: "1rem", margin: 0 }}>
+                                                {entity.owners.map(o => (
+                                                    <li key={o.id}>
+                                                        {o.ownerEntity ? o.ownerEntity.legalName : (o.ownerPerson ? `${o.ownerPerson.firstName} ${o.ownerPerson.lastName}` : 'Unknown')}
+                                                        : <strong>{o.percentage}%</strong>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </dd>
+                                    </div>
+                                )}
+
+                                {entity.supportingOrgType && (
+                                    <div>
+                                        <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Support Type</dt>
+                                        <dd className="badge badge-warning" style={{ width: "100%", justifyContent: "center" }}>{entity.supportingOrgType}</dd>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </dl>
+                </div>
+            </aside>
+        </div >
     )
 }

@@ -97,6 +97,7 @@ export async function deletePerson(id: string) {
             }
         }
 
+
         await prisma.person.delete({ where: { id } })
         await logAuditAction("DELETE", "Person", id, `Deleted person ID ${id}`)
         revalidatePath('/people')
@@ -104,5 +105,60 @@ export async function deletePerson(id: string) {
     } catch (error) {
         console.error("Delete Person Error:", error)
         return { success: false, error: "Database failure during deletion." }
+    }
+}
+
+const NameChangeSchema = z.object({
+    personId: z.string().uuid(),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    documentUrl: z.string().optional(), // Base64 or URL
+    effectiveDate: z.coerce.date().optional()
+})
+
+export async function changePersonName(prevState: FormState, formData: FormData) {
+    const data = Object.fromEntries(formData.entries())
+    const validated = NameChangeSchema.safeParse(data)
+
+    if (!validated.success) {
+        return { message: "Invalid name change data" }
+    }
+
+    const { personId, firstName, lastName, documentUrl, effectiveDate } = validated.data
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 1. Get current name
+            const current = await tx.person.findUniqueOrThrow({ where: { id: personId } })
+            const oldName = `${current.firstName} ${current.lastName}`
+            const newName = `${firstName} ${lastName}`
+
+            // 2. Update Person
+            await tx.person.update({
+                where: { id: personId },
+                data: { firstName, lastName }
+            })
+
+            // 3. Create History Record
+            await tx.nameChange.create({
+                data: {
+                    personId,
+                    oldName,
+                    newName,
+                    documentUrl,
+                    effectiveDate,
+                    // TODO: Capture userId from session if possible, but for now we track via AuditLog
+                }
+            })
+        })
+
+        await logAuditAction("UPDATE", "Person", personId, `Changed name to ${firstName} ${lastName}`)
+
+        revalidatePath(`/people/${personId}`)
+        return { success: true, message: "Name changed successfully" }
+
+    } catch (e) {
+        console.error("Name Change Error:", e)
+        return { message: "Failed to change name" }
     }
 }
