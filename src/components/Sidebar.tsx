@@ -16,6 +16,7 @@ export default function Sidebar({ isCollapsed, toggle }: { isCollapsed: boolean,
         { name: 'People', path: '/people', icon: '👥' },
         { name: 'Compliance', path: '/compliance', icon: '⚖️' },
         { name: 'Reports', path: '/reports', icon: '📄' },
+        { name: 'Users', path: '/admin/users', icon: '👤' },
     ]
 
     return (
