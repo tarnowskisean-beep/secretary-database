@@ -15,7 +15,7 @@ type PeopleOption = {
     lastName: string
 }
 
-export default function RiskFilters({ entities, people }: { entities: EntityOption[], people: PeopleOption[] }) {
+export default function RiskFilters({ entities, people, hideTypeAndLevel = false }: { entities: EntityOption[], people: PeopleOption[], hideTypeAndLevel?: boolean }) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -44,52 +44,56 @@ export default function RiskFilters({ entities, people }: { entities: EntityOpti
             border: "1px solid var(--border)",
             borderRadius: "var(--radius)"
         }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
-                    Alert Type
-                </label>
-                <select
-                    value={currentType}
-                    onChange={(e) => handleFilterChange('type', e.target.value)}
-                    style={{
-                        padding: "0.5rem",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        backgroundColor: "var(--background)",
-                        fontSize: "0.875rem",
-                        minWidth: "200px"
-                    }}
-                >
-                    <option value="">All Types</option>
-                    <option value="CONTROL">Corporate Control</option>
-                    <option value="INDEPENDENCE">Board Governance</option>
-                    <option value="CONFLICT">Conflict of Interest</option>
-                    <option value="SCHEDULE_R">Related Entity</option>
-                </select>
-            </div>
+            {!hideTypeAndLevel && (
+                <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
+                            Alert Type
+                        </label>
+                        <select
+                            value={currentType}
+                            onChange={(e) => handleFilterChange('type', e.target.value)}
+                            style={{
+                                padding: "0.5rem",
+                                borderRadius: "var(--radius)",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--background)",
+                                fontSize: "0.875rem",
+                                minWidth: "200px"
+                            }}
+                        >
+                            <option value="">All Types</option>
+                            <option value="CONTROL">Corporate Control</option>
+                            <option value="INDEPENDENCE">Board Governance</option>
+                            <option value="CONFLICT">Conflict of Interest</option>
+                            <option value="SCHEDULE_R">Related Entity</option>
+                        </select>
+                    </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
-                    Risk Level
-                </label>
-                <select
-                    value={searchParams.get('level') || ''}
-                    onChange={(e) => handleFilterChange('level', e.target.value)}
-                    style={{
-                        padding: "0.5rem",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        backgroundColor: "var(--background)",
-                        fontSize: "0.875rem",
-                        minWidth: "150px"
-                    }}
-                >
-                    <option value="">All Levels</option>
-                    <option value="HIGH">High Risk</option>
-                    <option value="MEDIUM">Medium Risk</option>
-                    <option value="INFO">Info / Disclosure</option>
-                </select>
-            </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
+                            Risk Level
+                        </label>
+                        <select
+                            value={searchParams.get('level') || ''}
+                            onChange={(e) => handleFilterChange('level', e.target.value)}
+                            style={{
+                                padding: "0.5rem",
+                                borderRadius: "var(--radius)",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--background)",
+                                fontSize: "0.875rem",
+                                minWidth: "150px"
+                            }}
+                        >
+                            <option value="">All Levels</option>
+                            <option value="HIGH">High Risk</option>
+                            <option value="MEDIUM">Medium Risk</option>
+                            <option value="INFO">Info / Disclosure</option>
+                        </select>
+                    </div>
+                </>
+            )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)" }}>

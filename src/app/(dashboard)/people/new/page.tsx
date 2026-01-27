@@ -14,11 +14,14 @@ export default function NewPersonPage() {
     const [state, formAction] = useActionState(createPerson, initialState)
     const [candidates, setCandidates] = useState<{ id: string, firstName: string, lastName: string }[]>([])
     const [showWarning, setShowWarning] = useState(false)
-    const formRef = useRef<HTMLFormElement>(null)
+    const skipCheckRef = useRef(false)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        // If we already showed warning, allow submit
-        if (showWarning) return
+        // If we already checked and passed, or showed warning, allow submit
+        if (skipCheckRef.current || showWarning) {
+            skipCheckRef.current = false // Reset for next time (e.g. if server error)
+            return
+        }
 
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
@@ -26,7 +29,8 @@ export default function NewPersonPage() {
         const lastName = formData.get('lastName') as string
 
         if (!firstName || !lastName || firstName.length < 2) {
-            // Let server validation handle basic errors, or just submit
+            // Let server validation handle basic errors, skip check
+            skipCheckRef.current = true
             e.currentTarget.requestSubmit()
             return
         }
@@ -39,6 +43,7 @@ export default function NewPersonPage() {
             setShowWarning(true)
         } else {
             // No duplicates, proceed
+            skipCheckRef.current = true
             e.currentTarget.requestSubmit()
         }
     }
@@ -52,7 +57,7 @@ export default function NewPersonPage() {
                 <h1 style={{ marginTop: "0.5rem" }}>New Person</h1>
             </header>
 
-            <form ref={formRef} action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            <form action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>

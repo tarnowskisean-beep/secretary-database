@@ -14,16 +14,20 @@ export default function NewEntityPage() {
     const [state, formAction] = useActionState(createEntity, initialState)
     const [candidates, setCandidates] = useState<{ id: string, legalName: string, ein?: string | null }[]>([])
     const [showWarning, setShowWarning] = useState(false)
-    const formRef = useRef<HTMLFormElement>(null)
+    const skipCheckRef = useRef(false)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        if (showWarning) return
+        if (skipCheckRef.current || showWarning) {
+            skipCheckRef.current = false
+            return
+        }
 
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
         const legalName = formData.get('legalName') as string
 
         if (!legalName || legalName.length < 3) {
+            skipCheckRef.current = true
             e.currentTarget.requestSubmit()
             return
         }
@@ -34,6 +38,7 @@ export default function NewEntityPage() {
             setCandidates(duplicates)
             setShowWarning(true)
         } else {
+            skipCheckRef.current = true
             e.currentTarget.requestSubmit()
         }
     }
@@ -47,7 +52,7 @@ export default function NewEntityPage() {
                 <h1 style={{ marginTop: "0.5rem" }}>New Entity</h1>
             </header>
 
-            <form ref={formRef} action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            <form action={formAction} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                     <label htmlFor="legalName" style={{ fontWeight: 500 }}>Legal Name</label>

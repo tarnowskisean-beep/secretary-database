@@ -246,9 +246,19 @@ export default async function CompliancePage(props: {
 
             {searchParams.get('tab') === 'overlap' && (
                 <div style={{ paddingTop: "2rem" }}>
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Board Overlap Details</h2>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                        <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Board Overlap Details</h2>
+                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+                            Found {overlaps.length} overlaps matching filters
+                        </div>
+                    </div>
+
+                    <RiskFilters entities={allEntities} people={allPeople} hideTypeAndLevel={true} />
+
                     {overlaps.length === 0 ? (
-                        <p style={{ color: "var(--muted-foreground)" }}>No overlaps detected in this period.</p>
+                        <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "var(--radius)" }}>
+                            <p style={{ color: "var(--muted-foreground)" }}>No overlaps detected matching your criteria.</p>
+                        </div>
                     ) : (
                         <div style={{ display: "grid", gap: "1.5rem" }}>
                             {overlaps.map((overlap) => (
