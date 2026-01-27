@@ -72,5 +72,34 @@ export async function checkPersonDuplicate(firstName: string, lastName: string) 
         return isSimilar(firstName, c.firstName, 2)
     })
 
+    // ... duplicate check code ...
     return duplicates
+}
+
+export async function deletePerson(id: string) {
+    try {
+        // Check for dependencies
+        const [roles, ownerships, rel1, rel2] = await Promise.all([
+            prisma.boardRole.count({ where: { personId: id } }),
+            prisma.entityOwner.count({ where: { ownerPersonId: id } }),
+            prisma.relationship.count({ where: { person1Id: id } }),
+            prisma.relationship.count({ where: { person2Id: id } })
+        ])
+
+        const totalRecords = roles + ownerships + rel1 + rel2
+
+        if (totalRecords > 0) {
+            return {
+                success: false,
+                error: `Cannot delete: attached to ${roles} roles, ${ownerships} ownerships, and ${rel1 + rel2} relationships.`
+            }
+        }
+
+        await prisma.person.delete({ where: { id } })
+        revalidatePath('/people')
+        return { success: true }
+    } catch (error) {
+        console.error("Delete Person Error:", error)
+        return { success: false, error: "Database failure during deletion." }
+    }
 }

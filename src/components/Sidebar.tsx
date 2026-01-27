@@ -3,12 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import { useEffect } from 'react'
+import { syncUser } from '@/server/actions/auth'
 
 export default function Sidebar({ isCollapsed, toggle }: { isCollapsed: boolean, toggle: () => void }) {
     const pathname = usePathname()
 
-
-
+    useEffect(() => {
+        // Sync user on initial load to ensure DB record exists
+        syncUser()
+    }, [])
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: '📊' },
@@ -17,6 +21,7 @@ export default function Sidebar({ isCollapsed, toggle }: { isCollapsed: boolean,
         { name: 'Compliance', path: '/compliance', icon: '⚖️' },
         { name: 'Reports', path: '/reports', icon: '📄' },
         { name: 'Users', path: '/admin/users', icon: '👤' },
+        { name: 'Activity', path: '/admin/activity', icon: '📜' },
     ]
 
     return (

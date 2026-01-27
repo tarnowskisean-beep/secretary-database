@@ -18,7 +18,7 @@ export default function NewEntityPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         if (skipCheckRef.current || showWarning) {
-            skipCheckRef.current = false
+            skipCheckRef.current = true
             return
         }
 

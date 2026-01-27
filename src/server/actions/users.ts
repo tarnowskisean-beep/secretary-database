@@ -63,9 +63,27 @@ export async function createUser(formData: unknown) {
     }
 }
 
-export async function getAuditLogs(userId?: string) {
+export async function createAuditLog(data: { action: string, resource: string, resourceId?: string, details?: string, userId?: string }) {
     try {
-        const where = userId ? { userId } : {};
+        await db.auditLog.create({
+            data: {
+                ...data,
+                userId: data.userId
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Audit Log Error:", error);
+        return { success: false, error: "Failed to log action" };
+    }
+}
+
+export async function getAuditLogs(userId?: string, action?: string) {
+    try {
+        const where: any = {};
+        if (userId) where.userId = userId;
+        if (action) where.action = action;
+
         const logs = await db.auditLog.findMany({
             where,
             orderBy: { createdAt: 'desc' },

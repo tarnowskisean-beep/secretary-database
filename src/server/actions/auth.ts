@@ -1,0 +1,55 @@
+'use server'
+
+import { createClient } from "@/utils/supabase/server"
+import { prisma as db } from "@/lib/db"
+import { UserRole } from "@prisma/client"
+
+export async function syncUser() {
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (error || !user || !user.email) {
+        return { success: false, error: "No authenticated user found" }
+    }
+
+    try {
+        // Check if user exists in our DB
+        const existingUser = await db.user.findUnique({
+            where: { id: user.id }
+        })
+
+        if (!existingUser) {
+            // Create new record
+            await db.user.create({
+                data: {
+                    id: user.id,
+                    email: user.email,
+                    role: UserRole.VIEWER, // Default role
+                    lastLogin: new Date()
+                }
+            })
+
+            // Log creation
+            await db.auditLog.create({
+                data: {
+                    action: "AUTO_CREATE",
+                    resource: "User",
+                    resourceId: user.id,
+                    userId: user.id,
+                    details: `Auto-created user record for ${user.email} on login`
+                }
+            })
+        } else {
+            // Update last login
+            await db.user.update({
+                where: { id: user.id },
+                data: { lastLogin: new Date() }
+            })
+        }
+
+        return { success: true }
+    } catch (dbError) {
+        console.error("Sync User DB Error:", dbError)
+        return { success: false, error: "Database sync failed" }
+    }
+}

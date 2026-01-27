@@ -28,6 +28,7 @@ async function getPerson(id: string) {
 }
 
 import PersonReportButton from '@/components/PersonReportButton'
+import PersonDeleteButton from '@/components/PersonDeleteButton'
 import AddRelationshipForm from '@/components/AddRelationshipForm'
 import AddRoleForm from '@/components/AddRoleForm'
 import EndRoleDialog from '@/components/EndRoleDialog'
@@ -167,6 +168,8 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                                 <AddRelationshipForm currentPersonId={person.id} allPeople={allPeople} />
                             </div>
                         </div>
+
+                        <PersonDeleteButton personId={person.id} />
                     </div>
 
                 </aside>

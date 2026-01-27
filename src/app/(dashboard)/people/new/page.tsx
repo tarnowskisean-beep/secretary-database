@@ -17,10 +17,10 @@ export default function NewPersonPage() {
     const skipCheckRef = useRef(false)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        // If we already checked and passed, or showed warning, allow submit
+        // If we already passed check or are ignoring warning, allow submit
         if (skipCheckRef.current || showWarning) {
-            skipCheckRef.current = false // Reset for next time (e.g. if server error)
-            return
+            skipCheckRef.current = true // Ensure we skip check on the actual submit
+            return // Let the default submission happen (or requestSubmit if called manually)
         }
 
         e.preventDefault()

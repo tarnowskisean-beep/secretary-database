@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
+import { syncUser } from '@/server/actions/auth'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -11,6 +12,8 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
     const supabase = createClient()
+
+    // ...
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -26,6 +29,9 @@ export default function LoginPage() {
             setError(error.message)
             setLoading(false)
         } else {
+            // Sync user record to DB
+            await syncUser()
+
             router.push('/')
             router.refresh()
         }
