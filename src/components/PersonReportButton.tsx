@@ -16,9 +16,26 @@ export default function PersonReportButton({ personId }: { personId: string }) {
 
             const doc = new jsPDF()
 
-            // Header
+            // -- APP LOGO (Compass Professional) --
+            try {
+                const response = await fetch('/logo.png')
+                const blob = await response.blob()
+                const base64AppLogo = await new Promise<string>((resolve) => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => resolve(reader.result as string)
+                    reader.readAsDataURL(blob)
+                })
+
+                if (base64AppLogo) {
+                    doc.addImage(base64AppLogo, 'PNG', 14, 5, 30, 8)
+                }
+            } catch (e) {
+                console.error("App logo load failed", e)
+            }
+
+            // Header Text (Shifted Down)
             doc.setFontSize(22)
-            doc.text(`${data.firstName} ${data.lastName}`, 14, 20)
+            doc.text(`${data.firstName} ${data.lastName}`, 14, 25)
 
             doc.setFontSize(10)
             doc.setTextColor(100)

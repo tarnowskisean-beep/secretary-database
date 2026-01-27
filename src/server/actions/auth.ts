@@ -45,6 +45,17 @@ export async function syncUser() {
                 where: { id: user.id },
                 data: { lastLogin: new Date() }
             })
+
+            // Log successful login
+            await db.auditLog.create({
+                data: {
+                    action: "LOGIN",
+                    resource: "Auth",
+                    resourceId: user.id,
+                    userId: user.id,
+                    details: `User ${user.email} logged in`
+                }
+            })
         }
 
         return { success: true }

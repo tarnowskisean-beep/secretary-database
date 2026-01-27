@@ -46,6 +46,24 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
             doc.setTextColor(150, 150, 150)
             doc.text("CONFIDENTIAL GOVERNANCE REPORT", pageWidth - 15, 10, { align: 'right' })
 
+            // -- APP LOGO (Compass Professional) --
+            try {
+                const response = await fetch('/logo.png')
+                const blob = await response.blob()
+                const base64AppLogo = await new Promise<string>((resolve) => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => resolve(reader.result as string)
+                    reader.readAsDataURL(blob)
+                })
+
+                if (base64AppLogo) {
+                    // Assume standard rectangular logo, fit to height 8mm
+                    doc.addImage(base64AppLogo, 'PNG', 15, 4, 30, 8)
+                }
+            } catch (e) {
+                console.error("App logo load failed", e)
+            }
+
             // Logo & Title
             let logoOffset = 0
             if (data.logoUrl) {
