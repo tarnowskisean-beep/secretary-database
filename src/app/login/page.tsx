@@ -29,8 +29,12 @@ export default function LoginPage() {
             setError(error.message)
             setLoading(false)
         } else {
-            // Sync user record to DB
-            await syncUser()
+            // Sync user record to DB (with timeout to prevent hanging)
+            // We race the sync against a 2.5s timer.
+            const syncPromise = syncUser()
+            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500))
+
+            await Promise.race([syncPromise, timeoutPromise])
 
             router.push('/')
             router.refresh()
