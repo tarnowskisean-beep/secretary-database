@@ -25,6 +25,9 @@ async function getPerson(id: string) {
             },
             nameChanges: {
                 orderBy: { changeDate: 'desc' }
+            },
+            attachments: {
+                orderBy: { createdAt: 'desc' }
             }
         }
     })
@@ -142,14 +145,17 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                             <RolesTable roles={pastRoles} personId={person.id} isActive={false} />
                         </div>
                     )}
-                </div>
 
-                <div className="card">
-                    <NameHistoryList history={person.nameChanges} />
+                    {/* Attachments Section */}
+                    <AttachmentsCard attachments={person.attachments} personId={person.id} />
                 </div>
 
                 {/* Sidebar Column */}
                 <aside style={{ display: "flex", flexDirection: "column", gap: "1.5rem", position: "sticky", top: "2rem" }}>
+
+                    <div className="card">
+                        <NameHistoryList history={person.nameChanges} />
+                    </div>
 
                     <div className="card" style={{ background: "var(--muted)" }}>
                         <h3 style={{ fontSize: "0.875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
