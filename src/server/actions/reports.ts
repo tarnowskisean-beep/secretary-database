@@ -33,7 +33,7 @@ export async function generateEntityBoardReport(status: 'ACTIVE' | 'INACTIVE' | 
         EntityType: role.entity.entityType,
         StateOfInc: role.entity.stateOfIncorporation || '',
         TaxClassification: role.entity.taxClassification || '',
-        FiscalYearEnd: role.entity.fiscalYearEnd || '',
+        // FiscalYearEnd removed per user request
         SupportingOrgType: role.entity.supportingOrgType || '',
         ParentAppointsBoard: role.entity.parentAppointsGoverningBody ? 'Yes' : 'No',
         DirectorName: `${role.person.firstName} ${role.person.lastName}`,

@@ -8,11 +8,8 @@ import { syncUser } from '@/server/actions/auth'
 
 export default function Sidebar({ isCollapsed, toggle }: { isCollapsed: boolean, toggle: () => void }) {
     const pathname = usePathname()
-
-    useEffect(() => {
-        // Sync user on initial load to ensure DB record exists
-        syncUser()
-    }, [])
+    // Removed syncUser on mount to prevent excessive DB writes/latency
+    // User is synced on login
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: '📊' },

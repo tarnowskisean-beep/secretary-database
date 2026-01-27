@@ -58,6 +58,8 @@ model Entity {
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([legalName])
 }
 
 // ... (Entity model remains same)
@@ -104,6 +106,8 @@ model Person {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([lastName, firstName])
 }
 
 model PersonAlias {
