@@ -62,7 +62,17 @@ async function main() {
                 entityType: e.type,
                 ein: `00-0000${counter}`,
                 taxClassification: e.type === 'For-Profit' ? 'C-Corp' : 'Exempt',
-                stateOfIncorporation: 'DE'
+                stateOfIncorporation: 'DE',
+                // New Schedule R Fields
+                primaryActivity: 'Public Policy Research & Education',
+                legalDomicile: 'DC',
+                exemptCodeSection: e.type.includes('501') ? e.type : null,
+                publicCharityStatus: e.type === '501(c)(3)' ? '170(b)(1)(A)(vi)' : null,
+                isSection512Controlled: false,
+                predominantIncomeType: 'Program',
+                shareOfTotalIncome: 0,
+                shareOfEndOfYearAssets: 0,
+                ubtiAmount: 0
             }
         })
         entityMap.set(e.acronym, entity.id)

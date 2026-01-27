@@ -30,6 +30,21 @@ model Entity {
   
   // Schedule R Specifics
   supportingOrgType   String?   // For Part I: TYPE_I, TYPE_II, TYPE_III_FI, TYPE_III_NFI
+  
+  // Schedule R Columns
+  primaryActivity     String?   // Part I-VI, Col (b) e.g., "Investment", "Program Services"
+  legalDomicile       String?   // Part I-VI, Col (e) State or Country
+  exemptCodeSection   String?   // Part II, Col (d) e.g., "501(c)(3)"
+  publicCharityStatus String?   // Part II, Col (e) e.g., "170(b)(1)(A)(vi)"
+  isSection512Controlled Boolean? // Part II, Col (g)
+  
+  // Part III/IV Financials
+  predominantIncomeType    String? // Part III, Col (h) "Investment" or "Program"
+  shareOfTotalIncome       Float?  // Part III/IV, Col (i)
+  shareOfEndOfYearAssets   Float?  // Part III/IV, Col (j)
+  disproportionateAllocation Boolean? // Part III, Col (k)
+  ubtiAmount               Float?  // Part III, Col (l) - Unrelated Business Taxable Income
+  isGeneralPartner         Boolean? // Part III, Col (m)
 
   // Relations
   owners            EntityOwner[] @relation("ChildEntity")
@@ -72,6 +87,12 @@ model Person {
   firstName   String
   lastName    String
   internalId  String?  @unique
+  
+  // Contact & Governance
+  email       String?
+  phone       String?
+  mailingAddress String?
+  
   aliases     PersonAlias[]
 
   roles       BoardRole[]
