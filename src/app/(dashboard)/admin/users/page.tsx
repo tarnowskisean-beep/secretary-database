@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react'
 import { getUsers, updateUserRole, deleteUser } from '@/server/actions/users'
 import { UserRole } from '@prisma/client'
+import AddUserDialog from '@/components/AddUserDialog'
+import ActivityLogModal from '@/components/ActivityLogModal'
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [showAddUser, setShowAddUser] = useState(false)
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
     useEffect(() => {
         loadUsers()
@@ -39,9 +43,13 @@ export default function UsersPage() {
                     <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
                     <p className="text-slate-500">Manage access roles and permissions.</p>
                 </div>
-                <div className="text-sm bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100">
-                    ℹ️ To add new users, invite them via the <strong>Supabase Dashboard</strong>. Once they log in, they will appear here.
-                </div>
+                <button
+                    onClick={() => setShowAddUser(true)}
+                    className="btn btn-primary"
+                    style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                >
+                    <span>+</span> Add User
+                </button>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -81,7 +89,12 @@ export default function UsersPage() {
                                         {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        {user._count.auditLogs} actions
+                                        <button
+                                            onClick={() => setSelectedUserId(user.id)}
+                                            className="hover:underline text-blue-600 font-medium"
+                                        >
+                                            {user._count.auditLogs} actions
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
@@ -97,6 +110,23 @@ export default function UsersPage() {
                     </tbody>
                 </table>
             </div>
+
+            {showAddUser && (
+                <AddUserDialog
+                    onClose={() => setShowAddUser(false)}
+                    onUserCreated={() => {
+                        loadUsers()
+                        setShowAddUser(false)
+                    }}
+                />
+            )}
+
+            {selectedUserId && (
+                <ActivityLogModal
+                    userId={selectedUserId}
+                    onClose={() => setSelectedUserId(null)}
+                />
+            )}
         </div>
     )
 }

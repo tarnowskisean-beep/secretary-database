@@ -8,6 +8,7 @@ import RiskFilters from '@/components/RiskFilters'
 import ScheduleRDetailsDialog from '@/components/ScheduleRDetailsDialog'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import ComplianceTabs from '@/components/ComplianceTabs'
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -27,17 +28,18 @@ export default async function CompliancePage(props: {
     })
 
     // 2. Parse URL Params
-    const searchParams = await props.searchParams
+    const resolvedParams = await props.searchParams
+    const searchParams = new URLSearchParams(resolvedParams as Record<string, string>)
 
     // Date Filters
     const today = new Date().toISOString().split('T')[0]
-    const start = typeof searchParams.start === 'string' ? searchParams.start : today
-    const end = typeof searchParams.end === 'string' ? searchParams.end : today
+    const start = searchParams.get('start') || today
+    const end = searchParams.get('end') || today
 
-    const typeFilter = typeof searchParams.type === 'string' ? searchParams.type : null
-    const levelFilter = typeof searchParams.level === 'string' ? searchParams.level : null
-    const entityFilter = typeof searchParams.entityId === 'string' ? searchParams.entityId : null
-    const personFilter = typeof searchParams.personId === 'string' ? searchParams.personId : null
+    const typeFilter = searchParams.get('type') || null
+    const levelFilter = searchParams.get('level') || null
+    const entityFilter = searchParams.get('entityId') || null
+    const personFilter = searchParams.get('personId') || null
 
     // 3. Fetch Core Data (Overlaps & Risks & Stats)
     let overlaps = await detectOverlaps(start, end)
@@ -215,69 +217,77 @@ export default async function CompliancePage(props: {
                 </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Risk Analysis</h2>
-                <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-                    Found {risks.length} risks matching filters
-                </div>
-            </div>
+            <ComplianceTabs />
 
-            <RiskFilters entities={allEntities} people={allPeople} />
+            {(!searchParams.get('tab') || searchParams.get('tab') === 'risks') && (
+                <>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                        <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Risk Analysis</h2>
+                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+                            Found {risks.length} risks matching filters
+                        </div>
+                    </div>
 
-            {risks.length === 0 ? (
-                <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "var(--radius)", marginBottom: "3rem" }}>
-                    <p>No risks match your filter criteria.</p>
-                </div>
-            ) : (
-                <div style={{ display: "grid", gap: "1rem", marginBottom: "3rem" }}>
-                    {risks.map(risk => (
-                        <RiskCard key={risk.id} risk={risk} />
-                    ))}
-                </div>
+                    <RiskFilters entities={allEntities} people={allPeople} />
+
+                    {risks.length === 0 ? (
+                        <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "var(--radius)", marginBottom: "3rem" }}>
+                            <p>No risks match your filter criteria.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: "grid", gap: "1rem", marginBottom: "3rem" }}>
+                            {risks.map(risk => (
+                                <RiskCard key={risk.id} risk={risk} />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Board Overlap Details</h2>
-                {overlaps.length === 0 ? (
-                    <p style={{ color: "var(--muted-foreground)" }}>No overlaps detected in this period.</p>
-                ) : (
-                    <div style={{ display: "grid", gap: "1.5rem" }}>
-                        {overlaps.map((overlap) => (
-                            <div key={`${overlap.entity1.id}-${overlap.entity2.id}`} className="card">
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                                    <div>
-                                        <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                            {overlap.entity1.name}
-                                            <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>↔</span>
-                                            {overlap.entity2.name}
-                                        </h3>
-                                        <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-                                            {overlap.entity1.type} • {overlap.entity2.type}
+            {searchParams.get('tab') === 'overlap' && (
+                <div style={{ paddingTop: "2rem" }}>
+                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Board Overlap Details</h2>
+                    {overlaps.length === 0 ? (
+                        <p style={{ color: "var(--muted-foreground)" }}>No overlaps detected in this period.</p>
+                    ) : (
+                        <div style={{ display: "grid", gap: "1.5rem" }}>
+                            {overlaps.map((overlap) => (
+                                <div key={`${overlap.entity1.id}-${overlap.entity2.id}`} className="card">
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                                        <div>
+                                            <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                {overlap.entity1.name}
+                                                <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>↔</span>
+                                                {overlap.entity2.name}
+                                            </h3>
+                                            <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
+                                                {overlap.entity1.type} • {overlap.entity2.type}
+                                            </div>
+                                        </div>
+                                        <div className="badge" style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}>
+                                            {overlap.overlapCount} Shared
                                         </div>
                                     </div>
-                                    <div className="badge" style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}>
-                                        {overlap.overlapCount} Shared
+                                    <div style={{ background: "var(--muted)", borderRadius: "var(--radius)", padding: "1rem" }}>
+                                        <h4 style={{ fontSize: "0.75rem", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Shared Directors / Officers</h4>
+                                        <ul style={{ listStyle: "none" }}>
+                                            {overlap.sharedPeople.map(p => (
+                                                <li key={p.id} style={{ marginBottom: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid var(--border)" }}>
+                                                    <div style={{ fontWeight: 600 }}>{p.name}</div>
+                                                    <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
+                                                        {overlap.entity1.name}: {p.roles1.join(", ")} <br />
+                                                        {overlap.entity2.name}: {p.roles2.join(", ")}
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 </div>
-                                <div style={{ background: "var(--muted)", borderRadius: "var(--radius)", padding: "1rem" }}>
-                                    <h4 style={{ fontSize: "0.75rem", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Shared Directors / Officers</h4>
-                                    <ul style={{ listStyle: "none" }}>
-                                        {overlap.sharedPeople.map(p => (
-                                            <li key={p.id} style={{ marginBottom: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid var(--border)" }}>
-                                                <div style={{ fontWeight: 600 }}>{p.name}</div>
-                                                <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
-                                                    {overlap.entity1.name}: {p.roles1.join(", ")} <br />
-                                                    {overlap.entity2.name}: {p.roles2.join(", ")}
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
