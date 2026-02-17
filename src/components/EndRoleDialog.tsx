@@ -5,6 +5,7 @@ import { useState, useActionState } from 'react'
 
 export default function EndRoleDialog({ roleId, personId }: { roleId: string, personId: string }) {
     const [isOpen, setIsOpen] = useState(false)
+    const [isMissingDoc, setIsMissingDoc] = useState(false)
     const endRoleWithIds = endRole.bind(null, roleId, personId)
     const [state, formAction] = useActionState(endRoleWithIds, { message: '', errors: {} })
 
@@ -80,29 +81,23 @@ export default function EndRoleDialog({ roleId, personId }: { roleId: string, pe
                                 <input
                                     type="checkbox"
                                     name="missingDoc"
-                                    onChange={(e) => {
-                                        const urlInput = document.getElementById('resignationDocUrl') as HTMLInputElement
-                                        if (e.target.checked) {
-                                            urlInput.value = ''
-                                            urlInput.disabled = true
-                                            urlInput.required = false
-                                        } else {
-                                            urlInput.disabled = false
-                                            urlInput.required = true
-                                        }
-                                    }}
+                                    checked={isMissingDoc}
+                                    onChange={(e) => setIsMissingDoc(e.target.checked)}
                                 />
                                 Missing document
                             </label>
                         </div>
-                        <input
-                            type="url"
-                            name="resignationDocUrl"
-                            id="resignationDocUrl"
-                            placeholder="https://drive.google.com/..."
-                            required
-                            className="input"
-                        />
+
+                        {!isMissingDoc && (
+                            <input
+                                type="url"
+                                name="resignationDocUrl"
+                                id="resignationDocUrl"
+                                placeholder="https://drive.google.com/..."
+                                required
+                                className="input"
+                            />
+                        )}
 
                         {state?.errors?.resignationDocUrl && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.resignationDocUrl[0]}</p>}
                     </div>

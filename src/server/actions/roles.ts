@@ -70,7 +70,7 @@ const EndRoleSchema = z.object({
 
 export async function endRole(roleId: string, personId: string, prevState: FormState, formData: FormData) {
     const rawData = {
-        resignationDocUrl: formData.get('resignationDocUrl') as string,
+        resignationDocUrl: (formData.get('resignationDocUrl') as string) || '',
         endDate: formData.get('endDate') as string,
         missingDoc: formData.get('missingDoc') as string
     }
