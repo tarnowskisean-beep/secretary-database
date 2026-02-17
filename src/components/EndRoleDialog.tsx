@@ -72,9 +72,29 @@ export default function EndRoleDialog({ roleId, personId }: { roleId: string, pe
                     </div>
 
                     <div>
-                        <label htmlFor="resignationDocUrl" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
-                            Resignation Document URL
-                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <label htmlFor="resignationDocUrl" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                                Resignation Document URL
+                            </label>
+                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    name="missingDoc"
+                                    onChange={(e) => {
+                                        const urlInput = document.getElementById('resignationDocUrl') as HTMLInputElement
+                                        if (e.target.checked) {
+                                            urlInput.value = ''
+                                            urlInput.disabled = true
+                                            urlInput.required = false
+                                        } else {
+                                            urlInput.disabled = false
+                                            urlInput.required = true
+                                        }
+                                    }}
+                                />
+                                Missing document
+                            </label>
+                        </div>
                         <input
                             type="url"
                             name="resignationDocUrl"

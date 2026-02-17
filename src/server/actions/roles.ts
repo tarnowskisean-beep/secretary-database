@@ -57,14 +57,22 @@ export async function createRole(personId: string, prevState: FormState, formDat
 
 // Schema for ending a role
 const EndRoleSchema = z.object({
-    resignationDocUrl: z.string().url("Must be a valid URL").min(1, "Resignation/Resolution Document is required"),
-    endDate: z.string().min(1, "End Date is required")
+    resignationDocUrl: z.string().optional(),
+    endDate: z.string().min(1, "End Date is required"),
+    missingDoc: z.string().optional()
+}).refine(data => {
+    if (data.missingDoc === 'on') return true
+    return data.resignationDocUrl && data.resignationDocUrl.length > 0 && z.string().url().safeParse(data.resignationDocUrl).success
+}, {
+    message: "Resignation/Resolution Document is required unless marked as missing",
+    path: ["resignationDocUrl"]
 })
 
 export async function endRole(roleId: string, personId: string, prevState: FormState, formData: FormData) {
     const rawData = {
-        resignationDocUrl: formData.get('resignationDocUrl'),
-        endDate: formData.get('endDate')
+        resignationDocUrl: formData.get('resignationDocUrl') as string,
+        endDate: formData.get('endDate') as string,
+        missingDoc: formData.get('missingDoc') as string
     }
 
     const validated = EndRoleSchema.safeParse(rawData)
@@ -76,12 +84,16 @@ export async function endRole(roleId: string, personId: string, prevState: FormS
         }
     }
 
+    const finalDocUrl = validated.data.missingDoc === 'on'
+        ? "Missing document"
+        : validated.data.resignationDocUrl
+
     try {
         await prisma.boardRole.update({
             where: { id: roleId },
             data: {
                 endDate: new Date(validated.data.endDate),
-                resignationDocUrl: validated.data.resignationDocUrl
+                resignationDocUrl: finalDocUrl
             }
         })
         revalidatePath(`/people/${personId}`)

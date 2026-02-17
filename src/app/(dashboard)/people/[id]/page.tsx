@@ -230,9 +230,15 @@ function RolesTable({ roles, personId, isActive }: { roles: { id: string, title:
                                             </a>
                                         )}
                                         {role.resignationDocUrl && (
-                                            <a href={role.resignationDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "red", textDecoration: "underline" }}>
-                                                Resig.
-                                            </a>
+                                            role.resignationDocUrl === "Missing document" ? (
+                                                <span style={{ color: "var(--muted-foreground)", fontStyle: "italic" }}>
+                                                    Missing Doc
+                                                </span>
+                                            ) : (
+                                                <a href={role.resignationDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "red", textDecoration: "underline" }}>
+                                                    Resig.
+                                                </a>
+                                            )
                                         )}
                                         {!role.appointmentDocUrl && !role.resignationDocUrl && <span style={{ color: "var(--muted-foreground)" }}>-</span>}
                                     </div>
