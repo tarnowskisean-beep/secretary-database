@@ -37,6 +37,7 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
     if (!filer) throw new Error("Filing Entity not found");
 
     const relatedEntities = new Map<string, any>();
+    const unrelatedPartnershipsMap = new Map<string, any>();
 
     // Helper to add entity
     const addFn = (e: any, relationType: string, percentage: number, parentName: string) => {
@@ -48,9 +49,24 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
 
     // A. Downstream (Subsidiaries)
     filer.subsidiaries.forEach(sub => {
-        // defined as > 50% for control, usually.
-        if (sub.percentage > 50) {
+        // Control: >50% Ownership OR Power to Appoint Board
+        // If we appoint their board, we control them.
+        const isControlled = sub.percentage > 50 || sub.childEntity.parentAppointsGoverningBody;
+
+        if (isControlled) {
             addFn(sub.childEntity, 'SUBSIDIARY', sub.percentage, filer.legalName);
+        } else if (sub.percentage > 5) {
+            // Part VI Check: Unrelated Partnership (> 5% but not controlled)
+            // Must be treated as a partnership (LLC or Partnership)
+            const type = sub.childEntity.entityType || '';
+            const tax = sub.childEntity.taxClassification || '';
+            const isPartnership = type.includes('Partnership') || tax.includes('Partnership') || type.includes('LLC');
+
+            if (isPartnership) {
+                if (!unrelatedPartnershipsMap.has(sub.childEntity.id)) {
+                    unrelatedPartnershipsMap.set(sub.childEntity.id, { ...sub.childEntity, _percentage: sub.percentage, parentName: filer.legalName });
+                }
+            }
         }
     });
 
@@ -58,15 +74,27 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
     filer.owners.forEach(owner => {
         const parentEntity = owner.ownerEntity;
         if (parentEntity) {
-            if (owner.percentage > 50) {
+            // Control: Owners > 50% OR Parent Appoints Our Board
+            // Note: If filer.parentAppointsGoverningBody is true, one of the parents appoints it. 
+            // We assume significant owners are the ones likely to have this power.
+            const isParentControl = owner.percentage > 50 || filer.parentAppointsGoverningBody;
+
+            if (isParentControl) {
                 addFn(parentEntity, 'PARENT', owner.percentage, parentEntity.legalName);
             }
+
             // C. Brother/Sister (Common Control)
-            // If Parent owns > 50% of ME, and > 50% of THEM, we are brother/sister.
-            if (owner.percentage > 50) {
+            // If Parent controls ME, and Parent controls THEM, we are brother/sister.
+            if (isParentControl) {
                 parentEntity.subsidiaries.forEach(sibling => {
-                    if (sibling.percentage > 50 && sibling.childEntityId !== filer.id) {
-                        addFn(sibling.childEntity, 'BROTHER_SISTER', sibling.percentage, parentEntity.legalName); // Parent is the common link
+                    const siblingEntity = sibling.childEntity;
+                    if (siblingEntity.id !== filer.id) {
+                        // Check if Parent controls Sibling
+                        const parentControlsSibling = sibling.percentage > 50 || siblingEntity.parentAppointsGoverningBody;
+
+                        if (parentControlsSibling) {
+                            addFn(siblingEntity, 'BROTHER_SISTER', sibling.percentage, parentEntity.legalName); // Parent is the common link
+                        }
                     }
                 });
             }
@@ -78,6 +106,7 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
     const partII_RelatedExempt: any[] = [];
     const partIII_Partnerships: any[] = [];
     const partIV_CorpsTrusts: any[] = [];
+    const partVI_Unrelated: any[] = [];
 
     relatedEntities.forEach(e => {
         const type = e.entityType || '';
@@ -103,6 +132,11 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
         }
     });
 
+    // Add Part VI
+    unrelatedPartnershipsMap.forEach(e => {
+        addToList(partVI_Unrelated, e);
+    });
+
     function addToList(list: any[], e: any) {
         list.push({
             id: e.id,
@@ -113,8 +147,10 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
     }
 
     // 3. Part V Transactions
-    // Threshold: > $50,000 for 501(c)(3)s
-    const THRESHOLD = 50000;
+    // Threshold: > $100,000 generally
+    const GENERAL_THRESHOLD = 100000;
+    // Types with $0 Threshold if Controlled (Line 2a-2d)
+    const ZERO_THRESHOLD_PATTERNS = ['INTEREST', 'ANNUIT', 'ROYALT', 'RENT'];
 
     // Flatten transactions
     const rawTransactions = [
@@ -137,15 +173,27 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
     rawTransactions.forEach(t => {
         // Must be with a Related Organization (Part I-IV)
         if (relatedEntities.has(t.otherEntity.id)) {
-            const isReportable = (t.amount || 0) >= THRESHOLD;
+            const typeUpper = (t.type || '').toUpperCase();
+            const descriptionUpper = (t.description || '').toUpperCase();
+
+            // Check for Zero Threshold Types
+            const isZeroThresholdType = ZERO_THRESHOLD_PATTERNS.some(p =>
+                typeUpper.includes(p) || descriptionUpper.includes(p)
+            );
+
+            const isReportable = (t.amount || 0) >= GENERAL_THRESHOLD || (isZeroThresholdType && (t.amount || 0) > 0);
 
             if (isReportable) reportableTransactionCount++;
+
+            // Note: Total Volume typically includes all related transactions, but for reporting purposes 
+            // we often focus on the reportable ones. We will sum all related volume here for completeness.
             totalTransactionVolume += (t.amount || 0);
 
             transactions.push({
                 id: t.id,
                 amount: t.amount,
                 description: t.description,
+                type: t.type,
                 fromEntity: t.direction === 'OUT' ? filer : t.otherEntity,
                 toEntity: t.direction === 'OUT' ? t.otherEntity : filer,
                 isReportable
@@ -165,8 +213,8 @@ export async function generateScheduleR(filingEntityId: string): Promise<Schedul
         relatedPartnerships: partIII_Partnerships,
         relatedCorpTrustCount: partIV_CorpsTrusts.length,
         relatedCorpsTrusts: partIV_CorpsTrusts,
-        unrelatedPartnershipCount: 0,
-        unrelatedPartnerships: [],
+        unrelatedPartnershipCount: partVI_Unrelated.length,
+        unrelatedPartnerships: partVI_Unrelated,
         transactionCount: transactions.length,
         reportableTransactionCount,
         transactions,
