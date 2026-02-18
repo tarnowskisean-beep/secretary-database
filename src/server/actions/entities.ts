@@ -180,21 +180,34 @@ export async function updateEntity(id: string, prevState: FormState, formData: F
         }
     }
 
+    const { legalName, ein, entityType, taxClassification, stateOfIncorporation, fiscalYearEnd, parentAppointsGoverningBody, supportingOrgType } = validated.data
+    let changes: string[] = []
+
     try {
         await prisma.$transaction(async (tx) => {
+            // Get existing for diff
+            const oldEntity = await tx.entity.findUniqueOrThrow({ where: { id } })
+
+            // Diffing
+            if (oldEntity.legalName !== legalName) changes.push(`Legal Name from "${oldEntity.legalName}" to "${legalName}"`)
+            if (oldEntity.entityType !== entityType) changes.push(`Type from "${oldEntity.entityType}" to "${entityType}"`)
+            if (oldEntity.stateOfIncorporation !== stateOfIncorporation) changes.push(`State from "${oldEntity.stateOfIncorporation || ''}" to "${stateOfIncorporation || ''}"`)
+            if (oldEntity.taxClassification !== taxClassification) changes.push(`Tax Class from "${oldEntity.taxClassification || ''}" to "${taxClassification || ''}"`)
+            if (oldEntity.parentAppointsGoverningBody !== parentAppointsGoverningBody) changes.push(`Parent Appoints Board from ${oldEntity.parentAppointsGoverningBody} to ${parentAppointsGoverningBody}`)
+
             // Update core entity details
             await tx.entity.update({
                 where: { id },
                 data: {
-                    legalName: validated.data.legalName,
-                    ein: validated.data.ein || null,
-                    entityType: validated.data.entityType,
-                    taxClassification: validated.data.taxClassification || null,
-                    stateOfIncorporation: validated.data.stateOfIncorporation || null,
-                    fiscalYearEnd: validated.data.fiscalYearEnd || null,
+                    legalName,
+                    ein: ein || null,
+                    entityType,
+                    taxClassification: taxClassification || null,
+                    stateOfIncorporation: stateOfIncorporation || null,
+                    fiscalYearEnd: fiscalYearEnd || null,
                     logoUrl: validated.data.logoUrl || null,
-                    parentAppointsGoverningBody: validated.data.parentAppointsGoverningBody,
-                    supportingOrgType: validated.data.supportingOrgType
+                    parentAppointsGoverningBody,
+                    supportingOrgType
                 }
             })
 
@@ -213,6 +226,7 @@ export async function updateEntity(id: string, prevState: FormState, formData: F
                             percentage: owner.percentage
                         }))
                     })
+                    changes.push("Updated ownership structure")
                 }
             }
         })
@@ -222,7 +236,8 @@ export async function updateEntity(id: string, prevState: FormState, formData: F
         return { message: `Failed to update entity: ${message}` }
     }
 
-    await logAuditAction("UPDATE", "Entity", id, `Updated entity ${validated.data.legalName}`)
+    const logDetails = changes.length > 0 ? changes.join(", ") : "Updated entity details (no specific field changes detected)"
+    await logAuditAction("UPDATE", "Entity", id, `Updated entity ${validated.data.legalName}: ${logDetails}`)
 
     revalidatePath(`/entities/${id}`)
     revalidatePath('/entities')
@@ -271,7 +286,7 @@ export async function createTransaction(prevState: FormState, formData: FormData
     }
 
     try {
-        await prisma.relatedTransaction.create({
+        const transaction = await prisma.relatedTransaction.create({
             data: {
                 fromEntityId: validated.data.fromEntityId,
                 toEntityId: validated.data.toEntityId,
@@ -279,8 +294,10 @@ export async function createTransaction(prevState: FormState, formData: FormData
                 amount: validated.data.amount,
                 description: validated.data.description,
                 date: validated.data.date
-            }
+            },
+            include: { fromEntity: true, toEntity: true }
         })
+        await logAuditAction("CREATE", "Transaction", transaction.id, `Created ${transaction.type} transaction of $${transaction.amount} from ${transaction.fromEntity.legalName} to ${transaction.toEntity.legalName}`)
     } catch (e) {
         console.error("Create Transaction Error:", e)
         return { message: "Failed to create transaction" }
@@ -307,11 +324,13 @@ export async function changeEntityName(prevState: FormState, formData: FormData)
     }
 
     const { entityId, legalName, documentUrl, effectiveDate } = validated.data
+    let oldName = ''
 
     try {
         await prisma.$transaction(async (tx) => {
             // 1. Get old name
             const current = await tx.entity.findUniqueOrThrow({ where: { id: entityId } })
+            oldName = current.legalName
 
             // 2. Update Entity
             await tx.entity.update({
@@ -331,7 +350,7 @@ export async function changeEntityName(prevState: FormState, formData: FormData)
             })
         })
 
-        await logAuditAction("UPDATE", "Entity", entityId, `Changed legal name to ${legalName}`)
+        await logAuditAction("UPDATE", "Entity", entityId, `Changed entity name for ${oldName} to ${legalName}`)
 
         revalidatePath(`/entities/${entityId}`)
         return { success: true, message: "Legal name changed successfully" }

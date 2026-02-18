@@ -89,8 +89,11 @@ export async function deletePerson(id: string) {
         }
 
 
+        const personToDelete = await prisma.person.findUnique({ where: { id } })
+        const name = personToDelete ? `${personToDelete.firstName} ${personToDelete.lastName}` : 'Unknown'
+
         await prisma.person.delete({ where: { id } })
-        await logAuditAction("DELETE", "Person", id, `Deleted person ID ${id}`)
+        await logAuditAction("DELETE", "Person", id, `Deleted person ${name}`)
         revalidatePath('/people')
         return { success: true }
     } catch (error) {
@@ -116,12 +119,13 @@ export async function changePersonName(prevState: FormState, formData: FormData)
     }
 
     const { personId, firstName, lastName, documentUrl, effectiveDate } = validated.data
+    let oldName = ''
 
     try {
         await prisma.$transaction(async (tx) => {
             // 1. Get current name
             const current = await tx.person.findUniqueOrThrow({ where: { id: personId } })
-            const oldName = `${current.firstName} ${current.lastName}`
+            oldName = `${current.firstName} ${current.lastName}`
             const newName = `${firstName} ${lastName}`
 
             // 2. Update Person
@@ -143,7 +147,7 @@ export async function changePersonName(prevState: FormState, formData: FormData)
             })
         })
 
-        await logAuditAction("UPDATE", "Person", personId, `Changed name to ${firstName} ${lastName}`)
+        await logAuditAction("UPDATE", "Person", personId, `Changed name for ${oldName} to ${firstName} ${lastName}`)
 
         revalidatePath(`/people/${personId}`)
         return { success: true, message: "Name changed successfully" }

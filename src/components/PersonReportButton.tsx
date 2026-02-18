@@ -62,11 +62,15 @@ export default function PersonReportButton({ personId }: { personId: string }) {
                     r.end
                 ]),
                 theme: 'striped',
-                styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0], valign: 'middle' },
                 headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                 alternateRowStyles: { fillColor: [245, 245, 245] },
                 columnStyles: {
-                    0: { fontStyle: 'bold' } // Entity Name bold
+                    0: { fontStyle: 'bold' }, // Entity Name
+                    3: { cellWidth: 20, halign: 'center' }, // Voting
+                    4: { cellWidth: 20, halign: 'center' }, // Comp
+                    5: { cellWidth: 25 }, // Start
+                    6: { cellWidth: 25 }  // End
                 }
             })
 
@@ -86,7 +90,7 @@ export default function PersonReportButton({ personId }: { personId: string }) {
                         r.details || ''
                     ]),
                     theme: 'striped',
-                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0], valign: 'middle' },
                     headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                     alternateRowStyles: { fillColor: [245, 245, 245] },
                     columnStyles: {

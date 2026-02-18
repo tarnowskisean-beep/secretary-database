@@ -193,14 +193,15 @@ function PDFButton({
                 }
 
                 // Board Table
-                doc.setFontSize(12)
+                doc.setFontSize(14)
+                doc.setFont('helvetica', 'bold')
                 doc.text("Board of Directors", 15, y)
-                y += 5
+                y += 4
 
                 const directors = entity.roles.filter((r) => r.roleType === 'DIRECTOR' || r.roleType === 'TRUSTEE')
 
                 autoTable(doc, {
-                    startY: y,
+                    startY: y + 2,
                     head: [['Name', 'Title', 'Voting', 'Term End']],
                     body: directors.map((r) => [
                         `${r.person.firstName} ${r.person.lastName}`,
@@ -209,11 +210,13 @@ function PDFButton({
                         r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                     ]),
                     theme: 'striped',
-                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0], valign: 'middle' },
                     headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                     alternateRowStyles: { fillColor: [245, 245, 245] },
                     columnStyles: {
-                        0: { fontStyle: 'bold' }
+                        0: { fontStyle: 'bold' },
+                        2: { cellWidth: 25, halign: 'center' },
+                        3: { cellWidth: 35, halign: 'center' }
                     }
                 })
 
@@ -221,13 +224,15 @@ function PDFButton({
                 y = doc.lastAutoTable.finalY + 15
 
                 // Officers Table
+                doc.setFontSize(14)
+                doc.setFont('helvetica', 'bold')
                 doc.text("Officers", 15, y)
-                y += 5
+                y += 4
                 const officers = entity.roles.filter((r) => r.roleType === 'OFFICER')
 
                 if (officers.length > 0) {
                     autoTable(doc, {
-                        startY: y,
+                        startY: y + 2,
                         head: [['Name', 'Title', 'Voting', 'Term End']],
                         body: officers.map((r) => [
                             `${r.person.firstName} ${r.person.lastName}`,
@@ -236,11 +241,13 @@ function PDFButton({
                             r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                         ]),
                         theme: 'striped',
-                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0], valign: 'middle' },
                         headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                         alternateRowStyles: { fillColor: [245, 245, 245] },
                         columnStyles: {
-                            0: { fontStyle: 'bold' }
+                            0: { fontStyle: 'bold' },
+                            2: { cellWidth: 25, halign: 'center' },
+                            3: { cellWidth: 35, halign: 'center' }
                         }
                     })
                     // @ts-expect-error - jspdf-autotable annotation
@@ -252,10 +259,12 @@ function PDFButton({
                 // Key Employees Table
                 const keyEmployees = entity.roles.filter((r) => r.roleType === 'KEY_EMPLOYEE')
                 if (keyEmployees.length > 0) {
+                    doc.setFontSize(14)
+                    doc.setFont('helvetica', 'bold')
                     doc.text("Key Employees", 15, y)
-                    y += 5
+                    y += 4
                     autoTable(doc, {
-                        startY: y,
+                        startY: y + 2,
                         head: [['Name', 'Title', 'Voting', 'Term End']],
                         body: keyEmployees.map((r) => [
                             `${r.person.firstName} ${r.person.lastName}`,
@@ -264,11 +273,13 @@ function PDFButton({
                             r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                         ]),
                         theme: 'striped',
-                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0], valign: 'middle' },
                         headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                         alternateRowStyles: { fillColor: [245, 245, 245] },
                         columnStyles: {
-                            0: { fontStyle: 'bold' }
+                            0: { fontStyle: 'bold' },
+                            2: { cellWidth: 25, halign: 'center' },
+                            3: { cellWidth: 35, halign: 'center' }
                         }
                     })
                     // @ts-expect-error - jspdf-autotable annotation
