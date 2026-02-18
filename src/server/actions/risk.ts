@@ -152,6 +152,13 @@ export async function analyzeRisksFromData(
 
             // Check if e1 controls e2 (Direct or Indirect)
             const e1ControlsE2 = getEffectiveControl(e2Data.id, e1Data.id)
+            const e1AppointsE2 = e2Data.parentAppointsGoverningBody // Simplified: assumes e1 is the parent if we are checking pairwise. ideally we check owners.
+
+            // Refined Control Check: Ownership > 50% OR Appoints Governance
+            // Note: pairwise check for 'parentAppoints' is hard without knowing WHICH parent. 
+            // We'll rely on ownership for specific pairwise, but flag separately if ownership is low but 'appoints' is true?
+            // Actually, for pairwise, we only know ownership. 
+
             if (e1ControlsE2) {
                 const isIndirect = e1ControlsE2.path.length > 0
                 risks.push({
@@ -189,6 +196,55 @@ export async function analyzeRisksFromData(
                 })
                 isRelated = true
             }
+
+            // Unrelated Partnership Check (Part VI)
+            // If one owns > 5% of the other (but <= 50%), and it's a partnership
+            const checkUnrelatedPartnership = (parent: EntityWithRelations, child: EntityWithRelations) => {
+                const ownership = parent.owners.find(o => o.ownerEntityId === child.id)?.percentage // Wait, parent owns child? No, child owners has parent.
+                // child.owners has parent
+                const ownerRec = child.owners.find(o => o.ownerEntityId === parent.id)
+                if (ownerRec && ownerRec.percentage > 5 && ownerRec.percentage <= 50) {
+                    const type = child.entityType || ''
+                    const tax = child.taxClassification || ''
+                    if (type.includes('Partnership') || tax.includes('Partnership') || type.includes('LLC')) {
+                        return ownerRec.percentage
+                    }
+                }
+                return null
+            }
+
+            const e1OwnsE2_Pct = checkUnrelatedPartnership(e1Data, e2Data)
+            if (e1OwnsE2_Pct) {
+                risks.push({
+                    id: `sch-r-part-vi-${e1Data.id}-${e2Data.id}`,
+                    type: 'SCHEDULE_R',
+                    level: 'INFO',
+                    message: `Schedule R Part VI: Unrelated Partnership.`,
+                    details: `${e1Data.legalName} owns ${e1OwnsE2_Pct}% of ${e2Data.legalName}.`,
+                    entity1Id: e1Data.id,
+                    entity2Id: e2Data.id,
+                    entity1Name: e1Data.legalName,
+                    entity2Name: e2Data.legalName
+                })
+                // Not "Related" in the strict sense for Board Overlap, but worth noting.
+            }
+
+            // Reverse check
+            const e2OwnsE1_Pct = checkUnrelatedPartnership(e2Data, e1Data)
+            if (e2OwnsE1_Pct) {
+                risks.push({
+                    id: `sch-r-part-vi-${e2Data.id}-${e1Data.id}`,
+                    type: 'SCHEDULE_R',
+                    level: 'INFO',
+                    message: `Schedule R Part VI: Unrelated Partnership.`,
+                    details: `${e2Data.legalName} owns ${e2OwnsE1_Pct}% of ${e1Data.legalName}.`,
+                    entity1Id: e2Data.id,
+                    entity2Id: e1Data.id,
+                    entity1Name: e2Data.legalName,
+                    entity2Name: e1Data.legalName
+                })
+            }
+
 
             // Check if they are brother-sister (Common Major Owner)
             if (isRelated === false) { // Don't double flag

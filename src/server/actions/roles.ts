@@ -16,7 +16,7 @@ const RoleSchema = z.object({
     appointmentDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional().nullable(),
 })
 
-export async function createRole(personId: string, prevState: FormState, formData: FormData) {
+export async function createRole(personId: string, prevState: FormState, formData: FormData): Promise<FormState> {
     const data = Object.fromEntries(formData.entries())
 
     const rawData = {
@@ -55,13 +55,34 @@ export async function createRole(personId: string, prevState: FormState, formDat
     }
 
     revalidatePath(`/people/${personId}`)
-    return { message: "Role added successfully" }
+    return { message: "Role added successfully", success: true }
 }
 
-// ... (EndRoleSchema remains unchanged)
+const EndRoleSchema = z.object({
+    resignationDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional(),
+    endDate: z.string().min(1, "End Date is required"),
+    missingDoc: z.string().optional()
+})
 
-export async function endRole(roleId: string, personId: string, prevState: FormState, formData: FormData) {
-    // ... (validation logic remains unchanged)
+export async function endRole(roleId: string, personId: string, prevState: FormState, formData: FormData): Promise<FormState> {
+    const rawData = {
+        resignationDocUrl: (formData.get('resignationDocUrl') as string) || '',
+        endDate: formData.get('endDate') as string,
+        missingDoc: formData.get('missingDoc') as string
+    }
+
+    const validated = EndRoleSchema.safeParse(rawData)
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: "Validation failed"
+        }
+    }
+
+    const finalDocUrl = validated.data.missingDoc === 'on'
+        ? "Missing document"
+        : validated.data.resignationDocUrl
 
     try {
         const role = await prisma.boardRole.update({
@@ -97,10 +118,35 @@ export async function restoreRole(roleId: string, personId: string) {
     }
 }
 
-// ... (UpdateRoleSchema remains unchanged)
+const UpdateRoleSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    roleType: z.string().min(1, "Role Type is required"),
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+    votingRights: z.coerce.boolean(),
+    isCompensated: z.coerce.boolean(),
+    appointmentDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional().nullable(),
+})
 
-export async function updateRole(roleId: string, prevState: FormState, formData: FormData) {
-    // ... (validation logic remains unchanged)
+export async function updateRole(roleId: string, prevState: FormState, formData: FormData): Promise<FormState> {
+    const data = Object.fromEntries(formData.entries())
+
+    const rawData = {
+        ...data,
+        startDate: data.startDate === '' ? null : data.startDate,
+        endDate: data.endDate === '' ? null : data.endDate,
+        votingRights: data.votingRights === 'on',
+        isCompensated: data.isCompensated === 'on',
+    }
+
+    const validated = UpdateRoleSchema.safeParse(rawData)
+
+    if (!validated.success) {
+        return {
+            errors: validated.error.flatten().fieldErrors,
+            message: "Validation failed"
+        }
+    }
 
     try {
         const role = await prisma.boardRole.update({
