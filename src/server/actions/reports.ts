@@ -90,11 +90,23 @@ export async function generatePersonBoardReport(status: 'ACTIVE' | 'INACTIVE' | 
     return Papa.unparse(data)
 }
 
-export async function getReportData() {
+export async function getReportData(status: 'ACTIVE' | 'INACTIVE' | 'ALL' = 'ALL') {
+    const whereClause: any = {}
+
+    if (status === 'ACTIVE') {
+        whereClause.OR = [
+            { endDate: null },
+            { endDate: { gt: new Date() } }
+        ]
+    } else if (status === 'INACTIVE') {
+        whereClause.endDate = { lte: new Date() }
+    }
+
     const data = await prisma.entity.findMany({
         orderBy: { legalName: 'asc' },
         include: {
             roles: {
+                where: whereClause,
                 include: {
                     person: true
                 },

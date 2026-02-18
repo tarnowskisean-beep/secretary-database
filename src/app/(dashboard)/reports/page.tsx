@@ -96,7 +96,7 @@ export default function ReportsPage() {
                             </p>
                         </div>
                         <div style={{ display: "flex", gap: "1rem" }}>
-                            <PDFButton />
+                            <PDFButton statusFilter={statusFilter} />
                         </div>
                     </div>
                 </section>
@@ -106,13 +106,13 @@ export default function ReportsPage() {
     )
 }
 
-function PDFButton() {
+function PDFButton({ statusFilter }: { statusFilter: 'ACTIVE' | 'INACTIVE' | 'ALL' }) {
     const handleDownload = async () => {
         const doc = new jsPDF()
 
         try {
             // Fetch data
-            const data = await getReportData()
+            const data = await getReportData(statusFilter)
 
             let y = 20
 
@@ -182,11 +182,12 @@ function PDFButton() {
 
                 autoTable(doc, {
                     startY: y,
-                    head: [['Name', 'Title', 'Compensated']],
+                    head: [['Name', 'Title', 'Compensated', 'Term End']],
                     body: officers.map((r) => [
                         `${r.person.firstName} ${r.person.lastName}`,
                         r.title,
-                        r.isCompensated ? 'Yes' : 'No'
+                        r.isCompensated ? 'Yes' : 'No',
+                        r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                     ])
                 })
                 // @ts-expect-error - jspdf-autotable annotation
