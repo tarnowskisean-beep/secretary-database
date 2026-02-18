@@ -134,17 +134,16 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
 
                 autoTable(doc, {
                     startY: y + 2,
-                    head: [['Name', 'Title', 'Voting', 'Comp', 'Term End']],
+                    head: [['Name', 'Title', 'Voting', 'Term End']],
                     body: board.map(r => [
                         `${r.person.firstName} ${r.person.lastName}`,
                         r.title,
                         r.votingRights ? 'Yes' : 'No',
-                        r.isCompensated ? 'Yes' : 'No',
                         r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                     ]),
-                    theme: 'grid',
-                    styles: { fontSize: 9, cellPadding: 1, textColor: [0, 0, 0] },
-                    headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    theme: 'striped',
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                     alternateRowStyles: { fillColor: [245, 245, 245] },
                     columnStyles: {
                         0: { fontStyle: 'bold' }
@@ -157,26 +156,25 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
             // Officers Table
             const officers = data.roles.filter(r => r.roleType === 'OFFICER')
             if (officers.length > 0) {
-                // Check page break
                 if (y > 250) { doc.addPage(); y = 20; }
 
                 doc.setFontSize(11)
                 doc.setFont('helvetica', 'bold')
-                doc.text("Officers & Key Employees", 15, y)
+                doc.text("Officers", 15, y)
                 y += 2
 
                 autoTable(doc, {
                     startY: y + 2,
-                    head: [['Name', 'Title', 'Compensated', 'Start Date']],
+                    head: [['Name', 'Title', 'Voting', 'Term End']],
                     body: officers.map(r => [
                         `${r.person.firstName} ${r.person.lastName}`,
                         r.title,
-                        r.isCompensated ? 'Yes' : 'No',
-                        r.startDate ? new Date(r.startDate).toLocaleDateString() : '-'
+                        r.votingRights ? 'Yes' : 'No',
+                        r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
                     ]),
-                    theme: 'grid',
-                    styles: { fontSize: 9, cellPadding: 1, textColor: [0, 0, 0] },
-                    headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    theme: 'striped',
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
                     alternateRowStyles: { fillColor: [245, 245, 245] },
                     columnStyles: {
                         0: { fontStyle: 'bold' }
@@ -186,6 +184,37 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
                 y = doc.lastAutoTable.finalY + 15
             } else {
                 y += 5
+            }
+
+            // Key Employees
+            const keyEmployees = data.roles.filter(r => r.roleType === 'KEY_EMPLOYEE')
+            if (keyEmployees.length > 0) {
+                if (y > 250) { doc.addPage(); y = 20; }
+
+                doc.setFontSize(11)
+                doc.setFont('helvetica', 'bold')
+                doc.text("Key Employees", 15, y)
+                y += 2
+
+                autoTable(doc, {
+                    startY: y + 2,
+                    head: [['Name', 'Title', 'Voting', 'Term End']],
+                    body: keyEmployees.map(r => [
+                        `${r.person.firstName} ${r.person.lastName}`,
+                        r.title,
+                        r.votingRights ? 'Yes' : 'No',
+                        r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
+                    ]),
+                    theme: 'striped',
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold' }
+                    }
+                })
+                // @ts-expect-error - jspdf-autotable annotation
+                y = doc.lastAutoTable.finalY + 15
             }
 
 

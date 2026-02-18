@@ -62,7 +62,12 @@ export default function PersonReportButton({ personId }: { personId: string }) {
                     r.end
                 ]),
                 theme: 'striped',
-                headStyles: { fillColor: [41, 51, 92] }
+                styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                columnStyles: {
+                    0: { fontStyle: 'bold' } // Entity Name bold
+                }
             })
 
             // Relationships Table
@@ -81,7 +86,12 @@ export default function PersonReportButton({ personId }: { personId: string }) {
                         r.details || ''
                     ]),
                     theme: 'striped',
-                    headStyles: { fillColor: [41, 51, 92] }
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold' }
+                    }
                 })
             }
 

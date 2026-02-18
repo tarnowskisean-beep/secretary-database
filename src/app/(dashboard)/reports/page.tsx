@@ -207,7 +207,14 @@ function PDFButton({
                         r.title,
                         r.votingRights ? 'Yes' : 'No',
                         r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
-                    ])
+                    ]),
+                    theme: 'striped',
+                    styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                    headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold' }
+                    }
                 })
 
                 // @ts-expect-error - jspdf-autotable annotation
@@ -218,18 +225,55 @@ function PDFButton({
                 y += 5
                 const officers = entity.roles.filter((r) => r.roleType === 'OFFICER')
 
-                autoTable(doc, {
-                    startY: y,
-                    head: [['Name', 'Title', 'Compensated', 'Term End']],
-                    body: officers.map((r) => [
-                        `${r.person.firstName} ${r.person.lastName}`,
-                        r.title,
-                        r.isCompensated ? 'Yes' : 'No',
-                        r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
-                    ])
-                })
-                // @ts-expect-error - jspdf-autotable annotation
-                y = doc.lastAutoTable.finalY + 15
+                if (officers.length > 0) {
+                    autoTable(doc, {
+                        startY: y,
+                        head: [['Name', 'Title', 'Voting', 'Term End']],
+                        body: officers.map((r) => [
+                            `${r.person.firstName} ${r.person.lastName}`,
+                            r.title,
+                            r.votingRights ? 'Yes' : 'No',
+                            r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
+                        ]),
+                        theme: 'striped',
+                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                        headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                        alternateRowStyles: { fillColor: [245, 245, 245] },
+                        columnStyles: {
+                            0: { fontStyle: 'bold' }
+                        }
+                    })
+                    // @ts-expect-error - jspdf-autotable annotation
+                    y = doc.lastAutoTable.finalY + 15
+                } else {
+                    y += 10
+                }
+
+                // Key Employees Table
+                const keyEmployees = entity.roles.filter((r) => r.roleType === 'KEY_EMPLOYEE')
+                if (keyEmployees.length > 0) {
+                    doc.text("Key Employees", 15, y)
+                    y += 5
+                    autoTable(doc, {
+                        startY: y,
+                        head: [['Name', 'Title', 'Voting', 'Term End']],
+                        body: keyEmployees.map((r) => [
+                            `${r.person.firstName} ${r.person.lastName}`,
+                            r.title,
+                            r.votingRights ? 'Yes' : 'No',
+                            r.endDate ? new Date(r.endDate).toLocaleDateString() : 'Active'
+                        ]),
+                        theme: 'striped',
+                        styles: { fontSize: 10, cellPadding: 3, textColor: [0, 0, 0] },
+                        headStyles: { fillColor: [14, 76, 146], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+                        alternateRowStyles: { fillColor: [245, 245, 245] },
+                        columnStyles: {
+                            0: { fontStyle: 'bold' }
+                        }
+                    })
+                    // @ts-expect-error - jspdf-autotable annotation
+                    y = doc.lastAutoTable.finalY + 15
+                }
             }
 
             doc.save('board_book.pdf')
