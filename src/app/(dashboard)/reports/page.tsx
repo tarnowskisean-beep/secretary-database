@@ -8,6 +8,8 @@ import { useState } from 'react'
 
 export default function ReportsPage() {
     const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'INACTIVE' | 'ALL'>('ALL')
+    const [startDate, setStartDate] = useState<string>('')
+    const [endDate, setEndDate] = useState<string>('')
 
     const handleDownloadCSV = async (type: 'ENTITY' | 'PERSON') => {
         let csvData = ''
@@ -88,6 +90,34 @@ export default function ReportsPage() {
                 {/* PDF SECTION */}
                 <section>
                     <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem", marginTop: "1rem" }}>Official Board Books (PDF)</h2>
+
+                    <div style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--muted)', borderRadius: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Date Range Filter (Optional)</p>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', display: 'block' }}>Start Date</label>
+                                <input
+                                    type="date"
+                                    className="input"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', display: 'block' }}>End Date</label>
+                                <input
+                                    type="date"
+                                    className="input"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'var(--muted-foreground)' }}>
+                            If dates are set, status filter is ignored and roles active during this range are included.
+                        </p>
+                    </div>
+
                     <div className="card">
                         <div style={{ marginBottom: "1rem" }}>
                             <h3 style={{ marginBottom: "0.5rem" }}>Generate Board Book</h3>
@@ -96,7 +126,7 @@ export default function ReportsPage() {
                             </p>
                         </div>
                         <div style={{ display: "flex", gap: "1rem" }}>
-                            <PDFButton statusFilter={statusFilter} />
+                            <PDFButton statusFilter={statusFilter} startDate={startDate} endDate={endDate} />
                         </div>
                     </div>
                 </section>
@@ -106,13 +136,21 @@ export default function ReportsPage() {
     )
 }
 
-function PDFButton({ statusFilter }: { statusFilter: 'ACTIVE' | 'INACTIVE' | 'ALL' }) {
+function PDFButton({
+    statusFilter,
+    startDate,
+    endDate
+}: {
+    statusFilter: 'ACTIVE' | 'INACTIVE' | 'ALL',
+    startDate: string,
+    endDate: string
+}) {
     const handleDownload = async () => {
         const doc = new jsPDF()
 
         try {
             // Fetch data
-            const data = await getReportData(statusFilter)
+            const data = await getReportData(statusFilter, startDate, endDate)
 
             let y = 20
 

@@ -90,10 +90,38 @@ export async function generatePersonBoardReport(status: 'ACTIVE' | 'INACTIVE' | 
     return Papa.unparse(data)
 }
 
-export async function getReportData(status: 'ACTIVE' | 'INACTIVE' | 'ALL' = 'ALL') {
+export async function getReportData(
+    status: 'ACTIVE' | 'INACTIVE' | 'ALL' = 'ALL',
+    startDate?: string,
+    endDate?: string
+) {
     const whereClause: any = {}
 
-    if (status === 'ACTIVE') {
+    // 1. If Date Range is provided, it overrides simple status checks for specific overlap logic
+    //    We want roles that were active AT ANY POINT during [startDate, endDate]
+    if (startDate && endDate) {
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+
+        whereClause.AND = [
+            // Role started before the range ended
+            {
+                OR: [
+                    { startDate: null },
+                    { startDate: { lte: end } }
+                ]
+            },
+            // Role ended after the range started (or hasn't ended)
+            {
+                OR: [
+                    { endDate: null },
+                    { endDate: { gte: start } }
+                ]
+            }
+        ]
+    }
+    // 2. Fallback to status-based filtering if no date range
+    else if (status === 'ACTIVE') {
         whereClause.OR = [
             { endDate: null },
             { endDate: { gt: new Date() } }
