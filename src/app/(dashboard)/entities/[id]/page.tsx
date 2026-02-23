@@ -217,7 +217,8 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                                                         entityId: entity.id,
                                                         startDate: role.startDate ?? null,
                                                         endDate: role.endDate ?? null,
-                                                        appointmentDocUrl: role.appointmentDocUrl ?? null
+                                                        appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                                        resignationDocUrl: role.resignationDocUrl ?? null
                                                     }} />
                                                 </td>
                                             </tr>

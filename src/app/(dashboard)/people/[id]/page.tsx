@@ -253,23 +253,35 @@ function RolesTable({ roles, personId, isActive }: { roles: { id: string, title:
                                                 startDate: role.startDate ?? null,
                                                 endDate: role.endDate ?? null,
                                                 appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                                resignationDocUrl: role.resignationDocUrl ?? null,
                                                 entityId: role.entity.id
                                             }} />
                                             <EndRoleDialog roleId={role.id} personId={personId} />
                                         </div>
                                     ) : (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                                             <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
                                                 Ended {role.endDate ? new Date(role.endDate).toLocaleDateString() : 'Unknown'}
                                             </span>
-                                            <form action={async () => {
-                                                'use server'
-                                                await restoreRole(role.id, personId)
-                                            }}>
-                                                <button type="submit" style={{ fontSize: "0.75rem", color: "blue", background: "none", border: "none", textDecoration: "underline", cursor: "pointer", padding: 0 }}>
-                                                    Restore
-                                                </button>
-                                            </form>
+                                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                                <EditRoleDialog role={{
+                                                    ...role,
+                                                    personId,
+                                                    startDate: role.startDate ?? null,
+                                                    endDate: role.endDate ?? null,
+                                                    appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                                    resignationDocUrl: role.resignationDocUrl ?? null,
+                                                    entityId: role.entity.id
+                                                }} />
+                                                <form action={async () => {
+                                                    'use server'
+                                                    await restoreRole(role.id, personId)
+                                                }}>
+                                                    <button type="submit" style={{ fontSize: "0.75rem", color: "blue", background: "none", border: "none", textDecoration: "underline", cursor: "pointer", padding: 0 }}>
+                                                        Restore
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     )}
                                 </td>

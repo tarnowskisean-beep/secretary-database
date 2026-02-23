@@ -90,7 +90,7 @@ export default function EndRoleDialog({ roleId, personId }: { roleId: string, pe
 
                         {!isMissingDoc && (
                             <input
-                                type="url"
+                                type="text"
                                 name="resignationDocUrl"
                                 id="resignationDocUrl"
                                 placeholder="https://drive.google.com/..."
@@ -118,6 +118,7 @@ export default function EndRoleDialog({ roleId, personId }: { roleId: string, pe
                             Confirm End Term
                         </button>
                     </div>
+                    {state?.message && !state.success && <p style={{ color: "red", textAlign: "center", fontSize: "0.875rem", marginTop: "1rem" }}>{state.message}</p>}
                 </form>
             </div>
         </div>

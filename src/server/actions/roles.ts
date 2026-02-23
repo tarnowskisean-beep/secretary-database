@@ -19,8 +19,14 @@ const RoleSchema = z.object({
 export async function createRole(personId: string, prevState: FormState, formData: FormData): Promise<FormState> {
     const data = Object.fromEntries(formData.entries())
 
+    let rawApptUrl = data.appointmentDocUrl as string || ''
+    if (rawApptUrl && !rawApptUrl.startsWith('http://') && !rawApptUrl.startsWith('https://')) {
+        rawApptUrl = `https://${rawApptUrl}`
+    }
+
     const rawData = {
         ...data,
+        appointmentDocUrl: rawApptUrl,
         votingRights: data.votingRights === 'on',
         isCompensated: data.isCompensated === 'on',
     }
@@ -65,10 +71,15 @@ const EndRoleSchema = z.object({
 })
 
 export async function endRole(roleId: string, personId: string, prevState: FormState, formData: FormData): Promise<FormState> {
+    let rawResigUrl = formData.get('resignationDocUrl') as string || ''
+    if (rawResigUrl && !rawResigUrl.startsWith('http://') && !rawResigUrl.startsWith('https://')) {
+        rawResigUrl = `https://${rawResigUrl}`
+    }
+
     const rawData = {
-        resignationDocUrl: (formData.get('resignationDocUrl') as string) || '',
+        resignationDocUrl: rawResigUrl,
         endDate: formData.get('endDate') as string,
-        missingDoc: formData.get('missingDoc') as string
+        missingDoc: (formData.get('missingDoc') as string) || undefined
     }
 
     const validated = EndRoleSchema.safeParse(rawData)
@@ -97,7 +108,8 @@ export async function endRole(roleId: string, personId: string, prevState: FormS
 
         revalidatePath(`/people/${personId}`)
         return { success: true, message: "Role ended successfully" }
-    } catch {
+    } catch (e) {
+        console.error("End role error:", e)
         return { message: "Failed to end role" }
     }
 }
@@ -126,10 +138,21 @@ const UpdateRoleSchema = z.object({
     votingRights: z.coerce.boolean(),
     isCompensated: z.coerce.boolean(),
     appointmentDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional().nullable(),
+    resignationDocUrl: z.union([z.string().url("Must be a valid URL"), z.literal("")]).optional().nullable(),
 })
 
 export async function updateRole(roleId: string, prevState: FormState, formData: FormData): Promise<FormState> {
     const data = Object.fromEntries(formData.entries())
+
+    let rawApptUrl = data.appointmentDocUrl as string || ''
+    if (rawApptUrl && !rawApptUrl.startsWith('http://') && !rawApptUrl.startsWith('https://')) {
+        rawApptUrl = `https://${rawApptUrl}`
+    }
+
+    let rawResigUrl = data.resignationDocUrl as string || ''
+    if (rawResigUrl && !rawResigUrl.startsWith('http://') && !rawResigUrl.startsWith('https://')) {
+        rawResigUrl = `https://${rawResigUrl}`
+    }
 
     const rawData = {
         ...data,
@@ -137,6 +160,8 @@ export async function updateRole(roleId: string, prevState: FormState, formData:
         endDate: data.endDate === '' ? null : data.endDate,
         votingRights: data.votingRights === 'on',
         isCompensated: data.isCompensated === 'on',
+        appointmentDocUrl: rawApptUrl,
+        resignationDocUrl: rawResigUrl
     }
 
     const validated = UpdateRoleSchema.safeParse(rawData)
@@ -158,7 +183,8 @@ export async function updateRole(roleId: string, prevState: FormState, formData:
                 endDate: validated.data.endDate ? new Date(validated.data.endDate) : null,
                 votingRights: validated.data.votingRights,
                 isCompensated: validated.data.isCompensated,
-                appointmentDocUrl: validated.data.appointmentDocUrl
+                appointmentDocUrl: validated.data.appointmentDocUrl,
+                resignationDocUrl: validated.data.resignationDocUrl
             },
             include: {
                 person: true,

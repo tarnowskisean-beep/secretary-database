@@ -16,6 +16,7 @@ export default function EditRoleDialog({ role }: {
         votingRights: boolean,
         isCompensated: boolean,
         appointmentDocUrl: string | null,
+        resignationDocUrl: string | null,
         personId: string,
         entityId: string
     }
@@ -126,7 +127,7 @@ export default function EditRoleDialog({ role }: {
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         <label htmlFor="appointmentDocUrl" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Appointment Doc URL</label>
                         <input
-                            type="url"
+                            type="text"
                             name="appointmentDocUrl"
                             id="appointmentDocUrl"
                             defaultValue={role.appointmentDocUrl || ''}
@@ -134,6 +135,19 @@ export default function EditRoleDialog({ role }: {
                             className="input"
                         />
                         {state?.errors?.appointmentDocUrl && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.appointmentDocUrl[0]}</p>}
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <label htmlFor="resignationDocUrl" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Resignation Doc URL</label>
+                        <input
+                            type="text"
+                            name="resignationDocUrl"
+                            id="resignationDocUrl"
+                            defaultValue={role.resignationDocUrl === "Missing document" ? "" : (role.resignationDocUrl || '')}
+                            placeholder="https://drive.google.com/..."
+                            className="input"
+                        />
+                        {state?.errors?.resignationDocUrl && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.resignationDocUrl[0]}</p>}
                     </div>
 
                     {/* Toggles */}
