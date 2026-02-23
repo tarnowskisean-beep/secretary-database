@@ -8,6 +8,8 @@ import NameHistoryList from '@/components/NameHistoryList'
 import AttachmentsCard from '@/components/AttachmentsCard'
 import EntityReportButton from '@/components/EntityReportButton'
 import EditRoleDialog from '@/components/EditRoleDialog'
+import EndRoleDialog from '@/components/EndRoleDialog'
+import { restoreRole } from '@/server/actions/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +25,10 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     // Identify if this entity is part of a corporate group
     const isSubsidiary = entity.owners.length > 0
     const isParent = entity.subsidiaries.length > 0
-    const boardMembers = entity.roles.filter(r => r.roleType === 'DIRECTOR' || r.roleType === 'TRUSTEE')
+
+    const today = new Date()
+    const activeRoles = entity.roles.filter(r => !r.endDate || r.endDate > today)
+    const pastRoles = entity.roles.filter(r => r.endDate && r.endDate <= today)
 
     return (
         <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
@@ -176,58 +181,25 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                         )}
                     </div>
 
-                    {/* Board Composition */}
+                    {/* Active Roles */}
                     <div className="card">
-                        <h3 style={{ marginBottom: "1rem", fontSize: "1.25rem" }}>Governing Body</h3>
-                        {boardMembers.length === 0 ? (
-                            <p style={{ color: "var(--muted-foreground)" }}>No active board members.</p>
-                        ) : (
-                            <div className="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Title</th>
-                                            <th>Voting</th>
-                                            <th>Documents</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {boardMembers.map(role => (
-                                            <tr key={role.id}>
-                                                <td>
-                                                    <Link href={`/people/${role.person.id}`} style={{ fontWeight: 500 }} className="hover:underline">
-                                                        {role.person.firstName} {role.person.lastName}
-                                                    </Link>
-                                                </td>
-                                                <td>{role.title}</td>
-                                                <td>{role.votingRights ? <span className="badge badge-success" style={{ background: "#dcfce7", color: "#166534" }}>Yes</span> : <span className="badge badge-secondary">No</span>}</td>
-                                                <td>
-                                                    {role.appointmentDocUrl && (
-                                                        <a href={role.appointmentDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline", fontSize: "0.875rem" }}>
-                                                            View Doc
-                                                        </a>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <EditRoleDialog role={{
-                                                        ...role,
-                                                        personId: role.person.id,
-                                                        entityId: entity.id,
-                                                        startDate: role.startDate ?? null,
-                                                        endDate: role.endDate ?? null,
-                                                        appointmentDocUrl: role.appointmentDocUrl ?? null,
-                                                        resignationDocUrl: role.resignationDocUrl ?? null
-                                                    }} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        <h3 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem" }}>Active Roles</h3>
+                        {activeRoles.length === 0 ? (
+                            <div style={{ padding: "2rem", textAlign: "center", color: "var(--muted-foreground)", background: "var(--muted)", borderRadius: "var(--radius)" }}>
+                                No active roles.
                             </div>
+                        ) : (
+                            <EntityRolesTable roles={activeRoles} entityId={entity.id} isActive={true} />
                         )}
                     </div>
+
+                    {/* Past Roles */}
+                    {pastRoles.length > 0 && (
+                        <div className="card">
+                            <h3 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem", color: "var(--muted-foreground)" }}>Past Roles (Historical)</h3>
+                            <EntityRolesTable roles={pastRoles} entityId={entity.id} isActive={false} />
+                        </div>
+                    )}
 
                     {/* Attachments Section */}
                     <AttachmentsCard attachments={entity.attachments} entityId={entity.id} />
@@ -289,6 +261,101 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     </div>
                 </aside>
             </div>
+        </div>
+    )
+}
+
+function EntityRolesTable({ roles, entityId, isActive }: { roles: any[], entityId: string, isActive: boolean }) {
+    return (
+        <div className="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Voting</th>
+                        <th>Documents</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {roles.map((role) => (
+                        <tr key={role.id} style={{ opacity: isActive ? 1 : 0.7 }}>
+                            <td>
+                                <Link href={`/people/${role.person.id}`} className="hover:underline" style={{ fontWeight: 500 }}>
+                                    {role.person.firstName} {role.person.lastName}
+                                </Link>
+                            </td>
+                            <td>{role.title}</td>
+                            <td><span className="badge badge-secondary">{role.roleType.replace('_', ' ')}</span></td>
+                            <td>{role.votingRights ? <span className="badge badge-success" style={{ background: '#dcfce7', color: '#166534' }}>Yes</span> : <span className="badge badge-outline">No</span>}</td>
+                            <td>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.75rem" }}>
+                                    {role.appointmentDocUrl && (
+                                        <a href={role.appointmentDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+                                            Appt.
+                                        </a>
+                                    )}
+                                    {role.resignationDocUrl && (
+                                        role.resignationDocUrl === "Missing document" ? (
+                                            <span style={{ color: "var(--muted-foreground)", fontStyle: "italic" }}>
+                                                Missing Doc
+                                            </span>
+                                        ) : (
+                                            <a href={role.resignationDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "red", textDecoration: "underline" }}>
+                                                Resig.
+                                            </a>
+                                        )
+                                    )}
+                                    {!role.appointmentDocUrl && !role.resignationDocUrl && <span style={{ color: "var(--muted-foreground)" }}>-</span>}
+                                </div>
+                            </td>
+                            <td>
+                                {isActive ? (
+                                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                                        <EditRoleDialog role={{
+                                            ...role,
+                                            personId: role.person.id,
+                                            startDate: role.startDate ?? null,
+                                            endDate: role.endDate ?? null,
+                                            appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                            resignationDocUrl: role.resignationDocUrl ?? null,
+                                            entityId
+                                        }} />
+                                        <EndRoleDialog roleId={role.id} personId={role.person.id} />
+                                    </div>
+                                ) : (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                        <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
+                                            Ended {role.endDate ? new Date(role.endDate).toLocaleDateString() : 'Unknown'}
+                                        </span>
+                                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                            <EditRoleDialog role={{
+                                                ...role,
+                                                personId: role.person.id,
+                                                startDate: role.startDate ?? null,
+                                                endDate: role.endDate ?? null,
+                                                appointmentDocUrl: role.appointmentDocUrl ?? null,
+                                                resignationDocUrl: role.resignationDocUrl ?? null,
+                                                entityId
+                                            }} />
+                                            <form action={async () => {
+                                                'use server'
+                                                await restoreRole(role.id, role.person.id)
+                                            }}>
+                                                <button type="submit" style={{ fontSize: "0.75rem", color: "blue", background: "none", border: "none", textDecoration: "underline", cursor: "pointer", padding: 0 }}>
+                                                    Restore
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     )
 }
