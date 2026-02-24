@@ -84,3 +84,12 @@ export async function requireAdmin() {
 
     return user
 }
+
+export async function logout() {
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+
+    // redirect must be called outside of try/catch if it's used, but here there's no try/catch
+    const { redirect } = await import('next/navigation')
+    redirect('/login')
+}

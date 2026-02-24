@@ -115,13 +115,66 @@ export default function Sidebar({ isCollapsed, toggle }: { isCollapsed: boolean,
 
             <div style={{ marginTop: "auto", borderTop: "1px solid #3f3f46", paddingTop: "1.5rem" }}>
                 {!isCollapsed ? (
-                    <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
-                        Logged in as<br />
-                        <strong style={{ color: "#f8fafc" }}>Admin User</strong>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
+                            Logged in as<br />
+                            <strong style={{ color: "#f8fafc" }}>Admin User</strong>
+                        </div>
+                        <form action={async () => {
+                            const { logout } = await import('@/server/actions/auth')
+                            await logout()
+                        }}>
+                            <button
+                                type="submit"
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#fca5a5",
+                                    cursor: "pointer",
+                                    fontSize: "0.875rem",
+                                    padding: "0.25rem 0.5rem",
+                                    borderRadius: "4px",
+                                    transition: "all 0.2s"
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.color = "#ef4444"
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.color = "#fca5a5"
+                                    e.currentTarget.style.background = "transparent"
+                                }}
+                            >
+                                Log Out
+                            </button>
+                        </form>
                     </div>
                 ) : (
-                    <div style={{ textAlign: "center", fontSize: "0.75rem", color: "#a1a1aa" }}>
-                        AU
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
+                        <div style={{ textAlign: "center", fontSize: "0.75rem", color: "#a1a1aa" }}>
+                            AU
+                        </div>
+                        <form action={async () => {
+                            const { logout } = await import('@/server/actions/auth')
+                            await logout()
+                        }}>
+                            <button
+                                type="submit"
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#fca5a5",
+                                    cursor: "pointer",
+                                    fontSize: "1.2rem",
+                                    padding: "0"
+                                }}
+                                title="Log Out"
+                                onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
+                                onMouseOut={(e) => e.currentTarget.style.color = "#fca5a5"}
+                            >
+                                🚪
+                            </button>
+                        </form>
                     </div>
                 )}
             </div>
