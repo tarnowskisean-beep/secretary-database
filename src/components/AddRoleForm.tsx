@@ -44,11 +44,6 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <label htmlFor="title" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Title</label>
-                <input type="text" name="title" id="title" placeholder="e.g. Director" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }} />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label htmlFor="roleType" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Role Type</label>
                 <select name="roleType" id="roleType" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }}>
                     <option value="DIRECTOR">Director</option>
@@ -56,6 +51,11 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
                     <option value="TRUSTEE">Trustee</option>
                     <option value="KEY_EMPLOYEE">Key Employee</option>
                 </select>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <label htmlFor="title" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Title</label>
+                <input type="text" name="title" id="title" placeholder="e.g. Director" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }} />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
