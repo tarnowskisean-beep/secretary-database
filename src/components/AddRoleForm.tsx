@@ -11,6 +11,19 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
     const [showDocWarning, setShowDocWarning] = useState(false)
     const docInputRef = useRef<HTMLInputElement>(null)
 
+    // Dynamic Title State
+    const [roleType, setRoleType] = useState('DIRECTOR')
+    const [officerTitles, setOfficerTitles] = useState<string[]>([])
+
+    // Officer title options
+    const OFFICER_OPTIONS = ["President", "Chairman", "CEO", "Treasurer", "Secretary", "Vice President", "General Counsel"]
+
+    const handleOfficerTitleToggle = (title: string) => {
+        setOfficerTitles(prev =>
+            prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]
+        )
+    }
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         const docUrl = docInputRef.current?.value
 
@@ -21,9 +34,7 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
             return
         }
 
-        // Otherwise (has URL OR already warned), let it submit naturally via action
-        // The form action will run automatically if we don't preventDefault
-        // But we need to make sure we don't double-submit if we are just "unblocking" the warning
+        // Otherwise let it submit naturally via action
     }
 
     // Reset warning if user starts typing
@@ -45,7 +56,19 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label htmlFor="roleType" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Role Type</label>
-                <select name="roleType" id="roleType" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }}>
+                <select
+                    name="roleType"
+                    id="roleType"
+                    value={roleType}
+                    onChange={(e) => {
+                        setRoleType(e.target.value)
+                        // Reset officer titles if switching away from OFFICER
+                        if (e.target.value !== 'OFFICER') {
+                            setOfficerTitles([])
+                        }
+                    }}
+                    style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }}
+                >
                     <option value="DIRECTOR">Director</option>
                     <option value="OFFICER">Officer</option>
                     <option value="TRUSTEE">Trustee</option>
@@ -55,7 +78,34 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label htmlFor="title" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Title</label>
-                <input type="text" name="title" id="title" placeholder="e.g. Director" style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }} />
+
+                {roleType === 'DIRECTOR' && (
+                    <>
+                        <input type="text" id="title-display" value="Director" readOnly style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", background: "#f1f5f9", color: "#64748b", width: "100%", cursor: "not-allowed" }} />
+                        <input type="hidden" name="title" value="Director" />
+                    </>
+                )}
+
+                {roleType === 'OFFICER' && (
+                    <div style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", background: "white", color: "black", width: "100%", maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        {OFFICER_OPTIONS.map(opt => (
+                            <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", cursor: "pointer", padding: "0.25rem" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={officerTitles.includes(opt)}
+                                    onChange={() => handleOfficerTitleToggle(opt)}
+                                />
+                                {opt}
+                            </label>
+                        ))}
+                        {/* The actual value sent back to the server action */}
+                        <input type="hidden" name="title" value={officerTitles.join(', ')} />
+                    </div>
+                )}
+
+                {(roleType === 'TRUSTEE' || roleType === 'KEY_EMPLOYEE') && (
+                    <input type="text" name="title" id="title" placeholder={roleType === 'TRUSTEE' ? "e.g. Lead Trustee" : "e.g. VP of Communications"} style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", color: "black", width: "100%" }} />
+                )}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>

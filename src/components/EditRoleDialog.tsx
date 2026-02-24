@@ -31,6 +31,25 @@ export default function EditRoleDialog({ role }: {
         setMounted(true)
     }, [])
 
+    // Dynamic Title State
+    const [roleType, setRoleType] = useState(role.roleType)
+
+    // Officer title options
+    const OFFICER_OPTIONS = ["President", "Chairman", "CEO", "Treasurer", "Secretary", "Vice President", "General Counsel"]
+
+    // Initialize officer titles if the role is already an officer
+    const initialOfficerTitles = role.roleType === 'OFFICER'
+        ? role.title.split(',').map(t => t.trim()).filter(t => OFFICER_OPTIONS.includes(t))
+        : []
+
+    const [officerTitles, setOfficerTitles] = useState<string[]>(initialOfficerTitles)
+
+    const handleOfficerTitleToggle = (title: string) => {
+        setOfficerTitles(prev =>
+            prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]
+        )
+    }
+
     // Auto-close on success
     useEffect(() => {
         if (state?.success && isOpen) {
@@ -73,27 +92,17 @@ export default function EditRoleDialog({ role }: {
 
                         <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                            {/* Title */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                                <label htmlFor="title" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Title</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    id="title"
-                                    defaultValue={role.title}
-                                    className="input"
-                                    required
-                                />
-                                {state?.errors?.title && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.title[0]}</p>}
-                            </div>
-
                             {/* Role Type */}
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                                 <label htmlFor="roleType" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Role Type</label>
                                 <select
                                     name="roleType"
                                     id="roleType"
-                                    defaultValue={role.roleType}
+                                    value={roleType}
+                                    onChange={(e) => {
+                                        setRoleType(e.target.value)
+                                        if (e.target.value !== 'OFFICER') setOfficerTitles([])
+                                    }}
                                     className="input"
                                 >
                                     <option value="DIRECTOR">Director</option>
@@ -101,6 +110,46 @@ export default function EditRoleDialog({ role }: {
                                     <option value="TRUSTEE">Trustee</option>
                                     <option value="KEY_EMPLOYEE">Key Employee</option>
                                 </select>
+                            </div>
+
+                            {/* Title */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                <label htmlFor="title" style={{ fontSize: "0.875rem", fontWeight: 500 }}>Title</label>
+
+                                {roleType === 'DIRECTOR' && (
+                                    <>
+                                        <input type="text" id="title-display" value="Director" readOnly className="input" style={{ background: "#f1f5f9", color: "#64748b", cursor: "not-allowed" }} />
+                                        <input type="hidden" name="title" value="Director" />
+                                    </>
+                                )}
+
+                                {roleType === 'OFFICER' && (
+                                    <div style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--input)", background: "white", color: "black", width: "100%", maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                        {OFFICER_OPTIONS.map(opt => (
+                                            <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", cursor: "pointer", padding: "0.25rem" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={officerTitles.includes(opt)}
+                                                    onChange={() => handleOfficerTitleToggle(opt)}
+                                                />
+                                                {opt}
+                                            </label>
+                                        ))}
+                                        <input type="hidden" name="title" value={officerTitles.join(', ')} />
+                                    </div>
+                                )}
+
+                                {(roleType === 'TRUSTEE' || roleType === 'KEY_EMPLOYEE') && (
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        id="title"
+                                        defaultValue={roleType === role.roleType ? role.title : ''}
+                                        className="input"
+                                        required
+                                    />
+                                )}
+                                {state?.errors?.title && <p style={{ color: "red", fontSize: "0.75rem" }}>{state.errors.title[0]}</p>}
                             </div>
 
                             {/* Dates Row */}
