@@ -225,7 +225,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
 
                             <div>
                                 <dt style={{ color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Tax Classification</dt>
-                                <dd><span className="badge badge-outline">{entity.taxClassification || "N/A"}</span></dd>
+                                <dd><span className="badge badge-outline">{entity.entityType || "N/A"}</span></dd>
                             </div>
 
                             {/* Schedule R Fields */}

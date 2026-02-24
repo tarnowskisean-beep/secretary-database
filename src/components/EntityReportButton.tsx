@@ -41,12 +41,7 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
             }
 
             // -- HEADER --
-            // Top Right Confidential Marker
-            doc.setFontSize(8)
-            doc.setTextColor(150, 150, 150)
-            doc.text("CONFIDENTIAL GOVERNANCE REPORT", pageWidth - 15, 10, { align: 'right' })
-
-            // -- APP LOGO (Compass Professional) --
+            // -- APP LOGO (Compass Professional) & Confidential Marker --
             try {
                 const response = await fetch('/logo.png')
                 const blob = await response.blob()
@@ -57,15 +52,27 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
                 })
 
                 if (base64AppLogo) {
-                    // Assume standard rectangular logo, fit to height 8mm
-                    doc.addImage(base64AppLogo, 'PNG', 15, 4, 30, 8)
+                    // Standard rectangular logo, fit to height 8mm
+                    doc.addImage(base64AppLogo, 'PNG', 15, 10, 30, 8)
                 }
             } catch (e) {
                 console.error("App logo load failed", e)
             }
 
-            // Logo & Title
-            let logoOffset = 0
+            // Top Right Confidential Marker
+            doc.setFontSize(8)
+            doc.setTextColor(150, 150, 150)
+            doc.text("CONFIDENTIAL GOVERNANCE REPORT", pageWidth - 15, 15, { align: 'right' })
+
+            // Draw a subtle separator line under the app header
+            doc.setDrawColor(220, 220, 220)
+            doc.line(15, 22, pageWidth - 15, 22)
+
+            // -- ENTITY LOGO & TITLE --
+            let startY = 32
+            let textX = 15
+            let logoHeight = 0
+
             if (data.logoUrl) {
                 try {
                     // Fetch image via server to avoid CORS
@@ -77,44 +84,54 @@ export default function EntityReportButton({ entityId }: { entityId: string }) {
                         await new Promise((resolve) => { img.onload = resolve })
 
                         // Calculate aspect ratio
-                        const maxWidth = 50
-                        const maxHeight = 25
+                        const maxWidth = 35
+                        const maxHeight = 20
                         const ratio = Math.min(maxWidth / img.width, maxHeight / img.height)
 
                         const width = img.width * ratio
-                        const height = img.height * ratio
+                        logoHeight = img.height * ratio
 
                         // Determine format from base64 header or let jspdf auto-detect
                         const format = base64Img.match(/data:image\/(\w+);base64/)?.[1]?.toUpperCase() || 'PNG'
 
-                        doc.addImage(base64Img, format, 15, 15, width, height)
-                        logoOffset = width + 5
+                        doc.addImage(base64Img, format, 15, startY, width, logoHeight)
+                        textX = 15 + width + 6
                     }
                 } catch (e) {
                     console.error("Logo load failed", e)
                 }
             }
 
-            // Entity Name (Large, Bold)
-            doc.setFontSize(24)
+            // Entity Name (Large, Bold, Wrapped)
+            doc.setFontSize(20)
             doc.setFont('helvetica', 'bold')
-            doc.setTextColor(0, 0, 0)
-            doc.text(data.legalName, 15 + logoOffset, 25)
+            doc.setTextColor(30, 41, 59) // slate-800
+
+            const maxTextWidth = pageWidth - textX - 15
+            const splitTitle = doc.splitTextToSize(data.legalName, maxTextWidth)
+
+            doc.text(splitTitle, textX, startY + 7)
+
+            // Calculate height of the title text (approx 7.5mm per line)
+            const titleTextHeight = splitTitle.length * 7.5
 
             // Subtitle / EIN
-            doc.setFontSize(11)
+            const subtitleY = startY + 7 + titleTextHeight
+            doc.setFontSize(10)
             doc.setFont('helvetica', 'normal')
             doc.setTextColor(100, 100, 100)
-            doc.text(`EIN: ${data.ein || 'N/A'}  |  Type: ${data.entityType}`, 15 + logoOffset, 32)
+            doc.text(`EIN: ${data.ein || 'N/A'}  |  Type: ${data.entityType}`, textX, subtitleY)
 
-            y = 50
+            // Determine where the first section should start
+            const contentBottomY = Math.max(startY + logoHeight, subtitleY + 4)
+            y = contentBottomY + 12
 
             // -- SECTION 1: GENERAL INFO --
             y = addHeader("ENTITY DETAILS", y)
             y += 5
 
             addText("State of Formation:", data.stateOfIncorporation || 'N/A', 15, y)
-            addText("Tax Classification:", data.taxClassification || 'N/A', 100, y)
+            addText("Tax Classification:", data.entityType || 'N/A', 100, y)
             y += 6
             // addText("Fiscal Year End:", data.fiscalYearEnd || 'N/A', 15, y)
             y += 15
