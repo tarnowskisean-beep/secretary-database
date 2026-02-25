@@ -14,9 +14,9 @@ export default function EntityNameHeader({ entityId, legalName, logoUrl, type }:
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "1.5rem" }}>
             <div style={{
-                width: "64px", height: "64px", borderRadius: "12px",
+                width: "64px", height: "64px", flexShrink: 0, borderRadius: "12px",
                 background: "white",
                 border: "1px solid var(--border)",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -30,18 +30,18 @@ export default function EntityNameHeader({ entityId, legalName, logoUrl, type }:
                     </div>
                 )}
             </div>
-            <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <h1 style={{ margin: 0, fontSize: "2rem" }}>{legalName}</h1>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                    <h1 style={{ margin: 0, fontSize: "2rem", lineHeight: 1.2, wordBreak: "break-word" }}>{legalName}</h1>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600, color: "var(--primary)", background: "var(--primary-foreground)", border: "1px solid var(--primary)", padding: "0.25rem 0.5rem", borderRadius: "1rem", cursor: "pointer" }}
+                        style={{ flexShrink: 0, marginTop: "0.35rem", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600, color: "var(--primary)", background: "var(--primary-foreground)", border: "1px solid var(--primary)", padding: "0.25rem 0.5rem", borderRadius: "1rem", cursor: "pointer", whiteSpace: "nowrap" }}
                         title="Record a Legal Name Change"
                     >
                         Change
                     </button>
                 </div>
-                <div style={{ display: "flex", gap: "1rem", marginTop: "0.25rem", color: "var(--muted-foreground)" }}>
+                <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", color: "var(--muted-foreground)" }}>
                     <span className="badge badge-secondary">{type}</span>
                 </div>
             </div>

@@ -37,14 +37,16 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
                     Back to Entities
                 </Link>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <EntityNameHeader
-                        entityId={entity.id}
-                        legalName={entity.legalName}
-                        logoUrl={entity.logoUrl}
-                        type={entity.entityType}
-                    />
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <EntityNameHeader
+                            entityId={entity.id}
+                            legalName={entity.legalName}
+                            logoUrl={entity.logoUrl}
+                            type={entity.entityType}
+                        />
+                    </div>
+                    <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
                         <EntityReportButton entityId={entity.id} />
                         <Link href={`/entities/${entity.id}/edit`} className="btn btn-secondary">
                             Edit Entity
@@ -275,6 +277,7 @@ function EntityRolesTable({ roles, entityId, isActive }: { roles: any[], entityI
                         <th>Title</th>
                         <th>Type</th>
                         <th>Voting</th>
+                        <th>Compensated</th>
                         <th>Documents</th>
                         <th>Actions</th>
                     </tr>
@@ -290,6 +293,7 @@ function EntityRolesTable({ roles, entityId, isActive }: { roles: any[], entityI
                             <td>{role.title}</td>
                             <td><span className="badge badge-secondary">{role.roleType.replace('_', ' ')}</span></td>
                             <td>{role.votingRights ? <span className="badge badge-success" style={{ background: '#dcfce7', color: '#166534' }}>Yes</span> : <span className="badge badge-outline">No</span>}</td>
+                            <td>{role.isCompensated ? <span className="badge badge-success" style={{ background: '#dcfce7', color: '#166534' }}>Yes</span> : <span className="badge badge-outline">No</span>}</td>
                             <td>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.75rem" }}>
                                     {role.appointmentDocUrl && (
