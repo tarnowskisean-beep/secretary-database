@@ -27,7 +27,7 @@ export async function createRole(personId: string, prevState: FormState, formDat
     const rawData = {
         ...data,
         appointmentDocUrl: rawApptUrl,
-        votingRights: data.votingRights === 'on',
+        votingRights: (data.roleType === 'OFFICER' || data.roleType === 'KEY_EMPLOYEE') ? false : (data.votingRights === 'on'),
         isCompensated: data.isCompensated === 'on',
     }
 
@@ -158,7 +158,7 @@ export async function updateRole(roleId: string, prevState: FormState, formData:
         ...data,
         startDate: data.startDate === '' ? null : data.startDate,
         endDate: data.endDate === '' ? null : data.endDate,
-        votingRights: data.votingRights === 'on',
+        votingRights: (data.roleType === 'OFFICER' || data.roleType === 'KEY_EMPLOYEE') ? false : (data.votingRights === 'on'),
         isCompensated: data.isCompensated === 'on',
         appointmentDocUrl: rawApptUrl,
         resignationDocUrl: rawResigUrl

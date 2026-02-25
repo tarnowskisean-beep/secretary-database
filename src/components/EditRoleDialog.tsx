@@ -205,8 +205,14 @@ export default function EditRoleDialog({ role }: {
 
                             {/* Toggles */}
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "center", marginTop: "0.5rem" }}>
-                                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem", cursor: "pointer" }}>
-                                    <input type="checkbox" name="votingRights" defaultChecked={role.votingRights} />
+                                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem", cursor: (roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? "not-allowed" : "pointer", opacity: (roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? 0.5 : 1 }}>
+                                    <input
+                                        type="checkbox"
+                                        name="votingRights"
+                                        checked={(roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? false : undefined}
+                                        defaultChecked={(roleType !== 'OFFICER' && roleType !== 'KEY_EMPLOYEE') ? role.votingRights : false}
+                                        disabled={roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE'}
+                                    />
                                     Voting Rights
                                 </label>
                                 <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem", cursor: "pointer" }}>

@@ -136,8 +136,14 @@ export default function AddRoleForm({ personId, entities }: { personId: string, 
             </div>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center" }}>
-                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem" }}>
-                    <input type="checkbox" name="votingRights" defaultChecked />
+                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem", cursor: (roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? "not-allowed" : "pointer", opacity: (roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? 0.5 : 1 }}>
+                    <input
+                        type="checkbox"
+                        name="votingRights"
+                        checked={(roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE') ? false : undefined}
+                        defaultChecked={(roleType !== 'OFFICER' && roleType !== 'KEY_EMPLOYEE')}
+                        disabled={roleType === 'OFFICER' || roleType === 'KEY_EMPLOYEE'}
+                    />
                     Voting Rights
                 </label>
                 <label style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.875rem" }}>
