@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function EntityFilter({ states = [] }: { states?: string[] }) {
+export default function EntityFilter({ states = [], types = [] }: { states?: string[], types?: string[] }) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -28,13 +28,9 @@ export default function EntityFilter({ states = [] }: { states?: string[] }) {
                     onChange={(e) => handleFilterChange('type', e.target.value)}
                 >
                     <option value="">All Types</option>
-                    <option value="501(c)(3)">501(c)(3)</option>
-                    <option value="501(c)(4)">501(c)(4)</option>
-                    <option value="527">527</option>
-                    <option value="LLC">LLC</option>
-                    <option value="S Corporation">S Corporation</option>
-                    <option value="C Corporation">C Corporation</option>
-                    <option value="Other">Other</option>
+                    {types.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                    ))}
                 </select>
             </div>
 

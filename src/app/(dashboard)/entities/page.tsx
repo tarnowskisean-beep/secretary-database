@@ -1,14 +1,15 @@
 
-import { getEntities, getUniqueStates } from '@/server/actions/entities'
+import { getEntities, getUniqueStates, getUniqueTypes } from '@/server/actions/entities'
 import Link from 'next/link'
 import EntityFilter from '@/components/EntityFilter'
 import EntitiesGrid from '@/components/EntitiesGrid'
 
 export default async function EntitiesPage({ searchParams }: { searchParams: Promise<{ type?: string, state?: string }> }) {
     const filters = await searchParams
-    const [entities, states] = await Promise.all([
+    const [entities, states, types] = await Promise.all([
         getEntities(filters),
-        getUniqueStates()
+        getUniqueStates(),
+        getUniqueTypes()
     ])
 
     return (
@@ -24,7 +25,7 @@ export default async function EntitiesPage({ searchParams }: { searchParams: Pro
                         Add Entity
                     </Link>
                 </div>
-                <EntityFilter states={states} />
+                <EntityFilter states={states} types={types} />
             </header>
 
             <EntitiesGrid entities={entities} />

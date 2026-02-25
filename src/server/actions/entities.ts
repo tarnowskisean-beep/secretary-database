@@ -45,6 +45,16 @@ export async function getUniqueStates() {
     return states.map(s => s.stateOfIncorporation).filter(Boolean) as string[]
 }
 
+export async function getUniqueTypes() {
+    const types = await prisma.entity.findMany({
+        select: { entityType: true },
+        distinct: ['entityType'],
+        where: { entityType: { not: '' } },
+        orderBy: { entityType: 'asc' }
+    })
+    return types.map(t => t.entityType).filter(Boolean) as string[]
+}
+
 export async function getEntities(filters?: { type?: string, state?: string }) {
     const where: import('@prisma/client').Prisma.EntityWhereInput = {}
 

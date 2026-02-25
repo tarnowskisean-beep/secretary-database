@@ -18,7 +18,8 @@ export default function EntitiesGrid({ entities }: { entities: Entity[] }) {
         const query = searchQuery.toLowerCase()
         return (
             entity.legalName.toLowerCase().includes(query) ||
-            (entity.ein && entity.ein.includes(query))
+            (entity.ein && entity.ein.includes(query)) ||
+            (entity.entityType && entity.entityType.toLowerCase().includes(query))
         )
     })
 
