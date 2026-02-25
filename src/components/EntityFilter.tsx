@@ -32,6 +32,8 @@ export default function EntityFilter({ states = [] }: { states?: string[] }) {
                     <option value="501(c)(4)">501(c)(4)</option>
                     <option value="527">527</option>
                     <option value="LLC">LLC</option>
+                    <option value="S Corporation">S Corporation</option>
+                    <option value="C Corporation">C Corporation</option>
                     <option value="Other">Other</option>
                 </select>
             </div>

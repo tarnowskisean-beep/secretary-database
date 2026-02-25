@@ -173,6 +173,8 @@ export default function EditEntityForm({ entity, allEntities, allPeople }: { ent
                     <option value="501(c)(4)">501(c)(4) Social Welfare</option>
                     <option value="527">527 Political Org</option>
                     <option value="LLC">LLC</option>
+                    <option value="S Corporation">S Corporation</option>
+                    <option value="C Corporation">C Corporation</option>
                     <option value="Other">Other</option>
                 </select>
             </div>
