@@ -317,6 +317,9 @@ const EntityNameChangeSchema = z.object({
 
 export async function changeEntityName(prevState: FormState, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
+    if (data.effectiveDate === '') {
+        delete data.effectiveDate
+    }
     const validated = EntityNameChangeSchema.safeParse(data)
 
     if (!validated.success) {

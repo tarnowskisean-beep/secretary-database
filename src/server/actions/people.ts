@@ -112,6 +112,9 @@ const NameChangeSchema = z.object({
 
 export async function changePersonName(prevState: FormState, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
+    if (data.effectiveDate === '') {
+        delete data.effectiveDate
+    }
     const validated = NameChangeSchema.safeParse(data)
 
     if (!validated.success) {
