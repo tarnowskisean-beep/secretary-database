@@ -195,13 +195,17 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                         )}
                     </div>
 
-                    {/* Past Roles */}
-                    {pastRoles.length > 0 && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem", color: "var(--muted-foreground)" }}>Past Roles (Historical)</h3>
+                    {/* Inactive Roles */}
+                    <div className="card">
+                        <h3 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "1rem", color: "var(--muted-foreground)" }}>Inactive Roles</h3>
+                        {pastRoles.length === 0 ? (
+                            <div style={{ padding: "2rem", textAlign: "center", color: "var(--muted-foreground)", background: "var(--muted)", borderRadius: "var(--radius)" }}>
+                                No inactive roles.
+                            </div>
+                        ) : (
                             <EntityRolesTable roles={pastRoles} entityId={entity.id} isActive={false} />
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Attachments Section */}
                     <AttachmentsCard attachments={entity.attachments} entityId={entity.id} />
