@@ -4,7 +4,11 @@ import AddAnnualReportDialog from '@/components/AddAnnualReportDialog'
 
 export const dynamic = 'force-dynamic'
 
-export default async function GlobalAnnualReportsPage() {
+export default async function GlobalAnnualReportsPage({
+    searchParams
+}: {
+    searchParams: { status?: string }
+}) {
     const trackedReports = await prisma.annualReport.findMany({
         include: {
             entity: {
@@ -64,12 +68,24 @@ export default async function GlobalAnnualReportsPage() {
     }).filter(Boolean)
 
     // Combine and sort
-    const allReports = [...trackedReports, ...expectedReports] as any[]
+    let allReports = [...trackedReports, ...expectedReports] as any[]
     allReports.sort((a, b) => {
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
         return a.dueDate.getTime() - b.dueDate.getTime()
     })
+
+    // Filter by search parameters
+    const activeStatusFilter = searchParams.status || 'ALL'
+    if (activeStatusFilter !== 'ALL') {
+        allReports = allReports.filter(report => {
+            // "Pending" tile covers both PENDING and EXPECTED since they group in the UI count
+            if (activeStatusFilter === 'PENDING') {
+                return report.status === 'PENDING' || report.status === 'EXPECTED'
+            }
+            return report.status === activeStatusFilter
+        })
+    }
 
     function getStatusBadge(status: string) {
         switch (status) {
@@ -82,11 +98,12 @@ export default async function GlobalAnnualReportsPage() {
         }
     }
 
-    // Quick stats
-    const total = allReports.length
-    const filed = allReports.filter(r => r.status === 'FILED').length
-    const pending = allReports.filter(r => r.status === 'PENDING' || r.status === 'EXPECTED').length
-    const overdue = allReports.filter(r => r.status === 'OVERDUE').length
+    // Quick stats (Calculate from the *unfiltered* combined lists so the tiles don't lose their absolute counts)
+    const rawAllReports = [...trackedReports, ...expectedReports].filter(Boolean) as any[]
+    const total = rawAllReports.length
+    const filed = rawAllReports.filter(r => r.status === 'FILED').length
+    const pending = rawAllReports.filter(r => r.status === 'PENDING' || r.status === 'EXPECTED').length
+    const overdue = rawAllReports.filter(r => r.status === 'OVERDUE').length
 
     return (
         <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
@@ -106,22 +123,38 @@ export default async function GlobalAnnualReportsPage() {
 
             {/* Stats Overview */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
-                <div className="card" style={{ padding: "1.5rem" }}>
+                <Link
+                    href="/reports/annual"
+                    className="card hover:shadow-md transition-shadow"
+                    style={{ padding: "1.5rem", border: activeStatusFilter === 'ALL' ? "2px solid var(--accent)" : undefined }}
+                >
                     <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Total Reports</div>
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{total}</div>
-                </div>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid #166534" }}>
+                </Link>
+                <Link
+                    href="/reports/annual?status=FILED"
+                    className="card hover:shadow-md transition-shadow"
+                    style={{ padding: "1.5rem", borderLeft: "4px solid #166534", border: activeStatusFilter === 'FILED' ? "2px solid #166534" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'FILED' ? "4px" : "4px" }}
+                >
                     <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Filed</div>
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{filed}</div>
-                </div>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid #f59e0b" }}>
+                </Link>
+                <Link
+                    href="/reports/annual?status=PENDING"
+                    className="card hover:shadow-md transition-shadow"
+                    style={{ padding: "1.5rem", borderLeft: "4px solid #f59e0b", border: activeStatusFilter === 'PENDING' ? "2px solid #f59e0b" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'PENDING' ? "4px" : "4px" }}
+                >
                     <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Pending</div>
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{pending}</div>
-                </div>
-                <div className="card" style={{ padding: "1.5rem", borderLeft: "4px solid #991b1b" }}>
+                </Link>
+                <Link
+                    href="/reports/annual?status=OVERDUE"
+                    className="card hover:shadow-md transition-shadow"
+                    style={{ padding: "1.5rem", borderLeft: "4px solid #991b1b", border: activeStatusFilter === 'OVERDUE' ? "2px solid #991b1b" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'OVERDUE' ? "4px" : "4px" }}
+                >
                     <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Overdue</div>
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{overdue}</div>
-                </div>
+                </Link>
             </div>
 
             <div className="card">
