@@ -47,7 +47,7 @@ export default function AddAnnualReportDialog({
     return (
         <>
             <button
-                className={isEditing ? "btn btn-outline" : "btn btn-primary"}
+                className={isEditing ? "btn btn-secondary" : "btn btn-primary"}
                 onClick={() => setIsOpen(true)}
                 style={isEditing ? { padding: "0.25rem 0.5rem", fontSize: "0.75rem" } : {}}
             >
@@ -63,7 +63,7 @@ export default function AddAnnualReportDialog({
                         </div>
 
                         <form action={handleSubmit}>
-                            {error && <div className="p-3 mb-4 text-sm text-red-800 bg-red-100 rounded-lg">{error}</div>}
+                            {error && <div style={{ padding: '0.75rem', marginBottom: '1rem', fontSize: '0.875rem', color: '#991b1b', backgroundColor: '#fee2e2', borderRadius: '0.5rem', border: '1px solid #fecaca' }}>{error}</div>}
 
                             <div className="form-group">
                                 <label>Year</label>
@@ -134,7 +134,7 @@ export default function AddAnnualReportDialog({
                                     <div />
                                 )}
                                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                    <button type="button" className="btn btn-outline" onClick={() => setIsOpen(false)}>Cancel</button>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>Cancel</button>
                                     <button type="submit" className="btn btn-primary">Save</button>
                                 </div>
                             </div>
