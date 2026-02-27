@@ -159,13 +159,10 @@ export default async function GlobalAnnualReportsPage() {
                                         <td>{report.dueDate ? new Date(report.dueDate).toLocaleDateString() : '-'}</td>
                                         <td>{report.filingDate ? new Date(report.filingDate).toLocaleDateString() : '-'}</td>
                                         <td>
-                                            {report.isExpected ? (
-                                                <AddAnnualReportDialog entityId={report.entityId} report={{ year: report.year, status: 'PENDING', entityId: report.entityId, dueDate: report.dueDate } as any} />
-                                            ) : (
-                                                <Link href={`/entities/${report.entityId}`} style={{ color: "var(--accent)", fontSize: "0.875rem", textDecoration: "underline" }}>
-                                                    View/Edit
-                                                </Link>
-                                            )}
+                                            <AddAnnualReportDialog
+                                                entityId={report.entityId}
+                                                report={report.isExpected ? { year: report.year, status: 'PENDING', entityId: report.entityId, dueDate: report.dueDate } as any : report}
+                                            />
                                         </td>
                                     </tr>
                                 ))}
