@@ -89,8 +89,8 @@ export async function getEntity(id: string) {
                 include: {
                     person: true
                 },
-                where: {
-                    endDate: null
+                orderBy: {
+                    startDate: 'desc'
                 }
             },
             transactionsOut: {
