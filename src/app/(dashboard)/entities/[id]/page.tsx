@@ -9,6 +9,7 @@ import AttachmentsCard from '@/components/AttachmentsCard'
 import EntityReportButton from '@/components/EntityReportButton'
 import EditRoleDialog from '@/components/EditRoleDialog'
 import EndRoleDialog from '@/components/EndRoleDialog'
+import AnnualReportsCard from '@/components/AnnualReportsCard'
 import { restoreRole } from '@/server/actions/roles'
 
 export const dynamic = 'force-dynamic'
@@ -182,6 +183,9 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                             </div>
                         )}
                     </div>
+
+                    {/* Annual Reports */}
+                    <AnnualReportsCard entityId={entity.id} reports={entity.annualReports || []} />
 
                     {/* Active Roles */}
                     <div className="card">

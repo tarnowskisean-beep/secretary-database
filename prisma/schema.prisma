@@ -58,6 +58,7 @@ model Entity {
 
   nameChanges       NameChange[]
   attachments       Attachment[]
+  annualReports     AnnualReport[]
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -268,4 +269,25 @@ model Attachment {
   
   @@index([personId])
   @@index([entityId])
+}
+
+model AnnualReport {
+  id          String   @id @default(uuid())
+  
+  entityId    String
+  entity      Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  
+  year        String   // e.g. "2024"
+  status      String   @default("PENDING") // PENDING, FILED, OVERDUE, EXEMPT
+  dueDate     DateTime?
+  filingDate  DateTime?
+  documentUrl String?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([entityId])
+  @@index([year])
+  @@index([status])
 }

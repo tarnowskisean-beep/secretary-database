@@ -131,6 +131,20 @@ export default function ReportsPage() {
                     </div>
                 </section>
 
+                {/* TRACKING DASHBOARDS SECTION */}
+                <section>
+                    <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem", marginTop: "1rem" }}>Tracking Dashboards</h2>
+                    <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: "4px solid var(--accent)" }}>
+                        <div>
+                            <h3 style={{ marginBottom: "0.25rem", fontSize: "1rem" }}>Annual Reports Tracking</h3>
+                            <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Global view of all state and federal annual filings.</p>
+                        </div>
+                        <Link href="/reports/annual" className="btn btn-primary">
+                            View Dashboard
+                        </Link>
+                    </div>
+                </section>
+
             </div>
         </div>
     )

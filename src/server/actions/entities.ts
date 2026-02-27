@@ -106,11 +106,13 @@ export async function getEntity(id: string) {
             },
             attachments: {
                 orderBy: { createdAt: 'desc' }
+            },
+            annualReports: {
+                orderBy: { year: 'desc' }
             }
         }
     })
 }
-
 export async function createEntity(prevState: FormState, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
 
