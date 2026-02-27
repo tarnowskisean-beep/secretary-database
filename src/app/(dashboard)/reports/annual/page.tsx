@@ -1,14 +1,39 @@
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import AddAnnualReportDialog from '@/components/AddAnnualReportDialog'
+import DateRangeFilter from '@/components/DateRangeFilter'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GlobalAnnualReportsPage(
-    props: { searchParams: Promise<{ status?: string }> }
+    props: { searchParams: Promise<{ status?: string, startDate?: string, endDate?: string }> }
 ) {
     const searchParams = await props.searchParams;
+
+    // Calculate default dates (3 months past, 3 months future)
+    const today = new Date()
+    const defaultStartDate = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate())
+    const defaultEndDate = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate())
+
+    // Parse or use defaults
+    const startDateRaw = searchParams.startDate ? new Date(searchParams.startDate) : defaultStartDate
+    const endDateRaw = searchParams.endDate ? new Date(searchParams.endDate) : defaultEndDate
+
+    // Use UTC boundaries to avoid timezone slips on the database
+    const queryStartDate = new Date(Date.UTC(startDateRaw.getFullYear(), startDateRaw.getMonth(), startDateRaw.getDate()))
+    const queryEndDate = new Date(Date.UTC(endDateRaw.getFullYear(), endDateRaw.getMonth(), endDateRaw.getDate(), 23, 59, 59, 999))
+
+    // Format for the HTML inputs
+    const formattedStart = queryStartDate.toISOString().split('T')[0]
+    const formattedEnd = queryEndDate.toISOString().split('T')[0]
+
     const trackedReports = await prisma.annualReport.findMany({
+        where: {
+            dueDate: {
+                gte: queryStartDate,
+                lte: queryEndDate
+            }
+        },
         include: {
             entity: {
                 select: {
@@ -39,16 +64,21 @@ export default async function GlobalAnnualReportsPage(
 
     const currentYear = new Date().getFullYear().toString()
 
-    // Determine which entities are missing their report for the current year
+    // Determine which entities are missing their report for the current year, and if that report falls in the window
     const expectedReports = recurringEntities.map(entity => {
-        const hasReportThisYear = trackedReports.some(r => r.entityId === entity.id && r.year === currentYear);
-        if (hasReportThisYear) return null;
-
         // Construct expected due date
         let dueDate: Date | null = null;
         if (entity.recurringReportDueMonth && entity.recurringReportDueDay) {
-            dueDate = new Date(parseInt(currentYear), entity.recurringReportDueMonth - 1, entity.recurringReportDueDay)
+            dueDate = new Date(Date.UTC(parseInt(currentYear), entity.recurringReportDueMonth - 1, entity.recurringReportDueDay))
         }
+
+        // If it doesn't have a due date, or falls outside the active query window, don't show it as an EXPECTED report in this view
+        if (!dueDate || dueDate < queryStartDate || dueDate > queryEndDate) {
+            return null
+        }
+
+        const hasReportThisYear = trackedReports.some(r => r.entityId === entity.id && r.year === currentYear);
+        if (hasReportThisYear) return null;
 
         return {
             id: `expected-${entity.id}`, // Mock ID
@@ -117,13 +147,14 @@ export default async function GlobalAnnualReportsPage(
                             Track state and federal filing statuses across all entities.
                         </p>
                     </div>
+                    <DateRangeFilter defaultStart={formattedStart} defaultEnd={formattedEnd} />
                 </div>
             </header>
 
             {/* Stats Overview */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
                 <Link
-                    href="/reports/annual"
+                    href={`/reports/annual?startDate=${formattedStart}&endDate=${formattedEnd}`}
                     className="card hover:shadow-md transition-shadow"
                     style={{ padding: "1.5rem", border: activeStatusFilter === 'ALL' ? "2px solid var(--accent)" : undefined }}
                 >
@@ -131,7 +162,7 @@ export default async function GlobalAnnualReportsPage(
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{total}</div>
                 </Link>
                 <Link
-                    href="/reports/annual?status=FILED"
+                    href={`/reports/annual?status=FILED&startDate=${formattedStart}&endDate=${formattedEnd}`}
                     className="card hover:shadow-md transition-shadow"
                     style={{ padding: "1.5rem", borderLeft: "4px solid #166534", border: activeStatusFilter === 'FILED' ? "2px solid #166534" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'FILED' ? "4px" : "4px" }}
                 >
@@ -139,7 +170,7 @@ export default async function GlobalAnnualReportsPage(
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{filed}</div>
                 </Link>
                 <Link
-                    href="/reports/annual?status=PENDING"
+                    href={`/reports/annual?status=PENDING&startDate=${formattedStart}&endDate=${formattedEnd}`}
                     className="card hover:shadow-md transition-shadow"
                     style={{ padding: "1.5rem", borderLeft: "4px solid #f59e0b", border: activeStatusFilter === 'PENDING' ? "2px solid #f59e0b" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'PENDING' ? "4px" : "4px" }}
                 >
@@ -147,7 +178,7 @@ export default async function GlobalAnnualReportsPage(
                     <div style={{ fontSize: "2rem", fontWeight: 700 }}>{pending}</div>
                 </Link>
                 <Link
-                    href="/reports/annual?status=OVERDUE"
+                    href={`/reports/annual?status=OVERDUE&startDate=${formattedStart}&endDate=${formattedEnd}`}
                     className="card hover:shadow-md transition-shadow"
                     style={{ padding: "1.5rem", borderLeft: "4px solid #991b1b", border: activeStatusFilter === 'OVERDUE' ? "2px solid #991b1b" : "1px solid var(--border)", borderLeftWidth: activeStatusFilter === 'OVERDUE' ? "4px" : "4px" }}
                 >
