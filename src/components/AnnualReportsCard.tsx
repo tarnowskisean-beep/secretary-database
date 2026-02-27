@@ -1,5 +1,4 @@
 import AddAnnualReportDialog from './AddAnnualReportDialog'
-import RecurringSettingsDialog from './RecurringSettingsDialog'
 import { AnnualReport } from '@prisma/client'
 
 // Use a custom loose type until local TS Server catches up with Prisma Generate
@@ -24,10 +23,10 @@ export default function AnnualReportsCard({ entity, reports = [] }: { entity: En
                     <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>State & Federal filing tracking</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <AddAnnualReportDialog entityId={entity.id} />
-                    <RecurringSettingsDialog
+                    <AddAnnualReportDialog
                         entityId={entity.id}
                         hasRecurringAnnualReport={entity.hasRecurringAnnualReport}
+                        recurringReportFrequency={entity.recurringReportFrequency}
                         recurringReportDueMonth={entity.recurringReportDueMonth}
                         recurringReportDueDay={entity.recurringReportDueDay}
                     />
@@ -68,7 +67,14 @@ export default function AnnualReportsCard({ entity, reports = [] }: { entity: En
                                         )}
                                     </td>
                                     <td>
-                                        <AddAnnualReportDialog entityId={entity.id} report={report} />
+                                        <AddAnnualReportDialog
+                                            entityId={entity.id}
+                                            report={report}
+                                            hasRecurringAnnualReport={entity.hasRecurringAnnualReport}
+                                            recurringReportFrequency={entity.recurringReportFrequency}
+                                            recurringReportDueMonth={entity.recurringReportDueMonth}
+                                            recurringReportDueDay={entity.recurringReportDueDay}
+                                        />
                                     </td>
                                 </tr>
                             ))}

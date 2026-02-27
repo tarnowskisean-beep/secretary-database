@@ -6,13 +6,22 @@ import { AnnualReport } from '@prisma/client'
 
 export default function AddAnnualReportDialog({
     entityId,
-    report
+    report,
+    hasRecurringAnnualReport = false,
+    recurringReportFrequency = 'ANNUAL',
+    recurringReportDueMonth = null,
+    recurringReportDueDay = null
 }: {
     entityId: string,
-    report?: AnnualReport
+    report?: AnnualReport,
+    hasRecurringAnnualReport?: boolean,
+    recurringReportFrequency?: string | null,
+    recurringReportDueMonth?: number | null,
+    recurringReportDueDay?: number | null
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isRecurring, setIsRecurring] = useState(hasRecurringAnnualReport)
     const isEditing = !!report
 
     async function handleSubmit(formData: FormData) {
@@ -124,6 +133,61 @@ export default function AddAnnualReportDialog({
                                     rows={3}
                                 />
                             </div>
+
+                            <hr style={{ margin: "1.5rem 0", borderColor: "var(--border)" }} />
+
+                            <h3 style={{ fontSize: "1rem", marginBottom: "1rem" }}>Recurrence Settings</h3>
+                            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                <input
+                                    type="checkbox"
+                                    id={`hasRecurringAnnualReport-${report?.id || 'new'}`}
+                                    name="hasRecurringAnnualReport"
+                                    checked={isRecurring}
+                                    onChange={(e) => setIsRecurring(e.target.checked)}
+                                    style={{ width: 'auto' }}
+                                />
+                                <label htmlFor={`hasRecurringAnnualReport-${report?.id || 'new'}`} style={{ margin: 0, cursor: 'pointer' }}>Make this a recurring requirement</label>
+                            </div>
+
+                            {isRecurring && (
+                                <div style={{ background: "var(--muted)", padding: "1rem", borderRadius: "var(--radius)", marginBottom: "1rem" }}>
+                                    <div className="form-group">
+                                        <label>Frequency</label>
+                                        <select name="recurringReportFrequency" defaultValue={recurringReportFrequency || 'ANNUAL'}>
+                                            <option value="ANNUAL">Annual</option>
+                                            <option value="BIANNUAL">Biannual</option>
+                                            <option value="QUARTERLY">Quarterly</option>
+                                            <option value="MONTHLY">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                                        <div className="form-group" style={{ marginBottom: 0 }}>
+                                            <label>Due Month (1-12)</label>
+                                            <input
+                                                type="number"
+                                                name="recurringReportDueMonth"
+                                                required={isRecurring}
+                                                min="1"
+                                                max="12"
+                                                defaultValue={recurringReportDueMonth || ''}
+                                                placeholder="Ex: 4 for April"
+                                            />
+                                        </div>
+                                        <div className="form-group" style={{ marginBottom: 0 }}>
+                                            <label>Due Day (1-31)</label>
+                                            <input
+                                                type="number"
+                                                name="recurringReportDueDay"
+                                                required={isRecurring}
+                                                min="1"
+                                                max="31"
+                                                defaultValue={recurringReportDueDay || ''}
+                                                placeholder="Ex: 15"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                                 {isEditing ? (

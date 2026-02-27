@@ -62,6 +62,7 @@ model Entity {
 
   // Recurring Tracking Configurations
   hasRecurringAnnualReport Boolean @default(false)
+  recurringReportFrequency String? @default("ANNUAL") // ANNUAL, BIANNUAL, QUARTERLY, MONTHLY
   recurringReportDueMonth  Int?    // 1-12
   recurringReportDueDay    Int?    // 1-31
 

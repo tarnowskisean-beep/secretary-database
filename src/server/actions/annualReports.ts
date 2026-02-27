@@ -20,7 +20,7 @@ const emptyToNull = (val: unknown) => (val === '' ? null : val)
 
 export async function createAnnualReport(prevState: FormState, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
-    
+
     // Convert empty strings to null for dates
     if (data.dueDate === '') delete data.dueDate
     if (data.filingDate === '') delete data.filingDate
@@ -36,17 +36,35 @@ export async function createAnnualReport(prevState: FormState, formData: FormDat
     }
 
     try {
-        const report = await prisma.annualReport.create({
-            data: {
-                entityId: validated.data.entityId,
-                year: validated.data.year,
-                status: validated.data.status,
-                dueDate: validated.data.dueDate || null,
-                filingDate: validated.data.filingDate || null,
-                documentUrl: validated.data.documentUrl || null,
-                notes: validated.data.notes || null,
-            },
-            include: { entity: true }
+        const report = await prisma.$transaction(async (tx) => {
+            const hasRecurringAnnualReport = data.hasRecurringAnnualReport === 'on'
+
+            await tx.entity.update({
+                where: { id: validated.data.entityId },
+                data: {
+                    // @ts-ignore
+                    hasRecurringAnnualReport,
+                    // @ts-ignore
+                    recurringReportFrequency: hasRecurringAnnualReport ? data.recurringReportFrequency as string : null,
+                    // @ts-ignore
+                    recurringReportDueMonth: hasRecurringAnnualReport ? (data.recurringReportDueMonth ? parseInt(data.recurringReportDueMonth as string) : null) : null,
+                    // @ts-ignore
+                    recurringReportDueDay: hasRecurringAnnualReport ? (data.recurringReportDueDay ? parseInt(data.recurringReportDueDay as string) : null) : null,
+                }
+            })
+
+            return tx.annualReport.create({
+                data: {
+                    entityId: validated.data.entityId,
+                    year: validated.data.year,
+                    status: validated.data.status,
+                    dueDate: validated.data.dueDate || null,
+                    filingDate: validated.data.filingDate || null,
+                    documentUrl: validated.data.documentUrl || null,
+                    notes: validated.data.notes || null,
+                },
+                include: { entity: true }
+            })
         })
 
         await logAuditAction("CREATE", "AnnualReport", report.id, `Created Annual Report ${report.year} for ${report.entity.legalName}`)
@@ -61,7 +79,7 @@ export async function createAnnualReport(prevState: FormState, formData: FormDat
 
 export async function updateAnnualReport(id: string, prevState: FormState, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
-    
+
     // Convert empty strings to null for dates
     if (data.dueDate === '') delete data.dueDate
     if (data.filingDate === '') delete data.filingDate
@@ -77,22 +95,44 @@ export async function updateAnnualReport(id: string, prevState: FormState, formD
     }
 
     try {
-        const report = await prisma.annualReport.update({
-            where: { id },
-            data: {
-                year: validated.data.year,
-                status: validated.data.status,
-                dueDate: validated.data.dueDate || null,
-                filingDate: validated.data.filingDate || null,
-                documentUrl: validated.data.documentUrl || null,
-                notes: validated.data.notes || null,
-            },
-            include: { entity: true }
+        const report = await prisma.$transaction(async (tx) => {
+            const hasRecurringAnnualReport = data.hasRecurringAnnualReport === 'on'
+
+            // Re-fetch existing report to get entityId if we need to update the Entity
+            const existingReport = await tx.annualReport.findUnique({ where: { id } })
+            if (existingReport) {
+                await tx.entity.update({
+                    where: { id: existingReport.entityId },
+                    data: {
+                        // @ts-ignore
+                        hasRecurringAnnualReport,
+                        // @ts-ignore
+                        recurringReportFrequency: hasRecurringAnnualReport ? data.recurringReportFrequency as string : null,
+                        // @ts-ignore
+                        recurringReportDueMonth: hasRecurringAnnualReport ? (data.recurringReportDueMonth ? parseInt(data.recurringReportDueMonth as string) : null) : null,
+                        // @ts-ignore
+                        recurringReportDueDay: hasRecurringAnnualReport ? (data.recurringReportDueDay ? parseInt(data.recurringReportDueDay as string) : null) : null,
+                    }
+                })
+            }
+
+            return tx.annualReport.update({
+                where: { id },
+                data: {
+                    year: validated.data.year,
+                    status: validated.data.status,
+                    dueDate: validated.data.dueDate || null,
+                    filingDate: validated.data.filingDate || null,
+                    documentUrl: validated.data.documentUrl || null,
+                    notes: validated.data.notes || null,
+                },
+                include: { entity: true }
+            })
         })
 
         await logAuditAction("UPDATE", "AnnualReport", id, `Updated Annual Report ${report.year} for ${report.entity.legalName}`)
 
-        revalidatePath(`/entities/${validated.data.entityId}`)
+        revalidatePath(`/entities/${report.entityId}`)
         return { success: true, message: "Annual report updated successfully" }
     } catch (e) {
         console.error("Update Annual Report Error:", e)
