@@ -4,11 +4,10 @@ import AddAnnualReportDialog from '@/components/AddAnnualReportDialog'
 
 export const dynamic = 'force-dynamic'
 
-export default async function GlobalAnnualReportsPage({
-    searchParams
-}: {
-    searchParams: { status?: string }
-}) {
+export default async function GlobalAnnualReportsPage(
+    props: { searchParams: Promise<{ status?: string }> }
+) {
+    const searchParams = await props.searchParams;
     const trackedReports = await prisma.annualReport.findMany({
         include: {
             entity: {
