@@ -375,3 +375,46 @@ export async function changeEntityName(prevState: FormState, formData: FormData)
         return { message: "Failed to change entity name" }
     }
 }
+
+const RecurringSettingsSchema = z.object({
+    entityId: z.string().uuid(),
+    hasRecurringAnnualReport: z.boolean(),
+    recurringReportDueMonth: z.number().min(1).max(12).nullable(),
+    recurringReportDueDay: z.number().min(1).max(31).nullable()
+})
+
+export async function updateRecurringSettings(prevState: FormState, formData: FormData) {
+    const data = Object.fromEntries(formData.entries())
+    const validated = RecurringSettingsSchema.safeParse({
+        entityId: data.entityId,
+        hasRecurringAnnualReport: data.hasRecurringAnnualReport === 'on',
+        recurringReportDueMonth: data.recurringReportDueMonth ? parseInt(data.recurringReportDueMonth as string, 10) : null,
+        recurringReportDueDay: data.recurringReportDueDay ? parseInt(data.recurringReportDueDay as string, 10) : null
+    })
+
+    if (!validated.success) {
+        return { message: "Invalid recurring settings data" }
+    }
+
+    const { entityId, hasRecurringAnnualReport, recurringReportDueMonth, recurringReportDueDay } = validated.data
+
+    try {
+        await prisma.entity.update({
+            where: { id: entityId },
+            data: {
+                hasRecurringAnnualReport,
+                recurringReportDueMonth,
+                recurringReportDueDay
+            }
+        })
+
+        await logAuditAction("UPDATE", "Entity", entityId, `Updated recurring annual report settings: ${hasRecurringAnnualReport ? `On (Month ${recurringReportDueMonth}, Day ${recurringReportDueDay})` : 'Off'}`)
+
+        revalidatePath(`/entities/${entityId}`)
+        revalidatePath(`/reports/annual`)
+        return { success: true, message: "Recurring settings saved successfully" }
+    } catch (e) {
+        console.error("Update Recurring Settings Error:", e)
+        return { message: "Failed to save recurring settings" }
+    }
+}

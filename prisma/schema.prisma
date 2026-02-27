@@ -60,6 +60,11 @@ model Entity {
   attachments       Attachment[]
   annualReports     AnnualReport[]
 
+  // Recurring Tracking Configurations
+  hasRecurringAnnualReport Boolean @default(false)
+  recurringReportDueMonth  Int?    // 1-12
+  recurringReportDueDay    Int?    // 1-31
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

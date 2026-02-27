@@ -185,7 +185,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
                     </div>
 
                     {/* Annual Reports */}
-                    <AnnualReportsCard entityId={entity.id} reports={entity.annualReports || []} />
+                    <AnnualReportsCard entity={entity} reports={entity.annualReports || []} />
 
                     {/* Active Roles */}
                     <div className="card">

@@ -1,7 +1,11 @@
 import AddAnnualReportDialog from './AddAnnualReportDialog'
+import RecurringSettingsDialog from './RecurringSettingsDialog'
 import { AnnualReport } from '@prisma/client'
 
-export default function AnnualReportsCard({ entityId, reports = [] }: { entityId: string, reports: AnnualReport[] }) {
+// Use a custom loose type until local TS Server catches up with Prisma Generate
+type EntityWithRecurring = any;
+
+export default function AnnualReportsCard({ entity, reports = [] }: { entity: EntityWithRecurring, reports: AnnualReport[] }) {
     function getStatusBadge(status: string) {
         switch (status) {
             case 'FILED': return <span className="badge badge-success" style={{ background: '#dcfce7', color: '#166534' }}>Filed</span>;
@@ -14,13 +18,21 @@ export default function AnnualReportsCard({ entityId, reports = [] }: { entityId
 
     return (
         <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "1rem", borderBottom: "1px solid var(--border)" }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
                 <div>
-                    <h3 style={{ fontSize: "1.25rem", margin: 0 }}>Annual Reports</h3>
-                    <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>State & Federal filing tracking</p>
+                    <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Annual Reports</h2>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>State & Federal filing tracking</p>
                 </div>
-                <AddAnnualReportDialog entityId={entityId} />
-            </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <AddAnnualReportDialog entityId={entity.id} />
+                    <RecurringSettingsDialog
+                        entityId={entity.id}
+                        hasRecurringAnnualReport={entity.hasRecurringAnnualReport}
+                        recurringReportDueMonth={entity.recurringReportDueMonth}
+                        recurringReportDueDay={entity.recurringReportDueDay}
+                    />
+                </div>
+            </header>
 
             {reports.length === 0 ? (
                 <div style={{ padding: "2rem", textAlign: "center", color: "var(--muted-foreground)", background: "var(--muted)", borderRadius: "var(--radius)" }}>
@@ -56,7 +68,7 @@ export default function AnnualReportsCard({ entityId, reports = [] }: { entityId
                                         )}
                                     </td>
                                     <td>
-                                        <AddAnnualReportDialog entityId={entityId} report={report} />
+                                        <AddAnnualReportDialog entityId={entity.id} report={report} />
                                     </td>
                                 </tr>
                             ))}
